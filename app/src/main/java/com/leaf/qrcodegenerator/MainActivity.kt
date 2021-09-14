@@ -2,15 +2,19 @@ package com.leaf.qrcodegenerator
 
 import android.content.ClipboardManager
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.hi.dhl.binding.viewbind
 import com.leaf.qrcodegenerator.databinding.ActivityMainBinding
 import com.leaf.qrcodegenerator.utils.StatusBarUtil
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -19,25 +23,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         StatusBarUtil.fitSystemBar(this)
         setContentView(binding.root)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
         binding.statusBarFix.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             StatusBarUtil.getStatusBarHeight(this)
         )
         binding.btnGenerate.setOnClickListener {
-            val intent = Intent(
-                this@MainActivity,
-                QrCodeActivity::class.java
-            )
-            intent.putExtra("content", binding.etContent.text.toString().trim())
-            startActivity(intent)
+            if (binding.etContent.text?.trim()?.isEmpty() == true){
+                Toast.makeText(this, "内容不能为空", Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                startActivity(Intent(this, QrCodeActivity::class.java).apply {
+                    putExtra("content", binding.etContent.text?.trim())
+                })
+            }
         }
         binding.cvCb.setOnClickListener {
-            val intent = Intent(
-                this@MainActivity,
-                QrCodeActivity::class.java
-            )
-            intent.putExtra("content", binding.tvCb.text.toString().trim())
-            startActivity(intent)
+            startActivity(Intent(this, QrCodeActivity::class.java).apply {
+                putExtra("content", binding.tvCb.text.trim())
+            })
         }
     }
 
@@ -47,10 +52,9 @@ class MainActivity : AppCompatActivity() {
             binding.LLClipboard.visibility = View.VISIBLE
         } else
             binding.LLClipboard.visibility = View.GONE
-
     }
 
-    private fun getClipboardContent(): String? {
+    private fun getClipboardContent(): String {
         val clipboard = this@MainActivity.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         val clipData = clipboard.primaryClip
         if (clipData == null || clipData.itemCount <= 0) {
@@ -64,6 +68,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        Handler().postDelayed({ setClipboard() }, 1000)
+        lifecycleScope.launch {
+            delay(500)
+            setClipboard()
+        }
     }
 }
