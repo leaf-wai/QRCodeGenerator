@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
                     .show()
             } else {
                 startActivity(Intent(this, QrCodeActivity::class.java).apply {
-                    putExtra("content", binding.etContent.text?.trim())
+                    putExtra("content", binding.etContent.text.toString().trim())
                 })
             }
         }

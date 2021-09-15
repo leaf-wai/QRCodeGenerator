@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
 import com.hi.dhl.binding.viewbind
 import com.king.zxing.util.CodeUtils
@@ -21,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 
 class QrCodeActivity : AppCompatActivity() {
     private val binding: ActivityQrCodeBinding by viewbind()
@@ -42,6 +42,9 @@ class QrCodeActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener {
             saveQRCode()
         }
+        if (intent.getStringExtra("content").isNullOrEmpty()) {
+            finish()
+        }
     }
 
     private fun saveQRCode() {
@@ -51,7 +54,7 @@ class QrCodeActivity : AppCompatActivity() {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
             .explainReasonBeforeRequest()
-            .onExplainRequestReason { scope, deniedList, beforeRequest ->
+            .onExplainRequestReason { scope, deniedList, _ ->
                 scope.showRequestReasonDialog(
                     deniedList,
                     "二维码生成器 需要您同意以下权限才能保存二维码",
@@ -66,7 +69,7 @@ class QrCodeActivity : AppCompatActivity() {
                     "确定"
                 )
             }
-            .request { allGranted, grantedList, deniedList ->
+            .request { allGranted, _, deniedList ->
                 if (allGranted) {
                     lifecycleScope.launch { savePhoto() }
                 } else {
@@ -79,18 +82,25 @@ class QrCodeActivity : AppCompatActivity() {
     //协程处理保存图片
     private suspend fun savePhoto() {
         withContext(Dispatchers.IO) {
-            val bitmap: Bitmap = binding.ivQrCode.drawable.toBitmap() //可以传入图片的大小，默认是显示的图片
+            val bitmap: Bitmap = CodeUtils.createQRCode(
+                intent.getStringExtra("content"),
+                800
+            )
             //设置保存地址
+            val content = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "QRCode_${Calendar.getInstance().timeInMillis}")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            }
             val saveUri: Uri = contentResolver.insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                ContentValues()
+                content
             ) ?: kotlin.run {
                 Toast.makeText(this@QrCodeActivity, "保存失败", Toast.LENGTH_SHORT).show()
                 return@withContext
             }
             //保存图片
             contentResolver.openOutputStream(saveUri).use {
-                if (bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it)) { //90%的压缩率，it是输出流
+                if (bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)) { //90%的压缩率，it是输出流
                     //在主线程提示用户
                     MainScope().launch {
                         Toast.makeText(
