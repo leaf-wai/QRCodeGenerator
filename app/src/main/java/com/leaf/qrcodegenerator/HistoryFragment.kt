@@ -13,7 +13,7 @@ import com.leaf.qrcodegenerator.utils.SPUtils
 class HistoryFragment : Fragment(R.layout.fragment_history) {
 
     private val binding: FragmentHistoryBinding by binding()
-    private val historyAdapter = HistoryAdapter()
+    val historyAdapter = HistoryAdapter()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
