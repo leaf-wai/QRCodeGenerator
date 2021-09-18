@@ -11,7 +11,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.hi.dhl.binding.viewbind
+import com.dylanc.viewbinding.binding
 import com.king.zxing.util.CodeUtils
 import com.leaf.qrcodegenerator.databinding.ActivityQrCodeBinding
 import com.leaf.qrcodegenerator.utils.StatusBarUtil
@@ -23,10 +23,10 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 class QrCodeActivity : AppCompatActivity() {
-    private val binding: ActivityQrCodeBinding by viewbind()
+    private val binding: ActivityQrCodeBinding by binding()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        StatusBarUtil.fitSystemBar(this)
+        StatusBarUtil.lightStatusBar(this)
         setContentView(binding.root)
         binding.statusBarFix.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,

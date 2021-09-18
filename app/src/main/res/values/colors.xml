@@ -11,4 +11,6 @@
     <color name="gray">#f6f6f6</color>
     <color name="slate_gray">#868fab</color>
     <color name="textBlack">#333333</color>
+    <color name="tabTextSelected">#282828</color>
+    <color name="tabTextUnSelected">#969696</color>
 </resources>
