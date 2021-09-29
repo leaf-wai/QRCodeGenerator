@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     private val binding: ActivityMainBinding by binding()
     private lateinit var hisAdapter: HistoryAdapter
+    private lateinit var historyFragment: HistoryFragment
     private val titles = arrayOf("生成", "历史")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
             ) { _, _ ->
                 SPUtils.clearHistory()
                 hisAdapter.setList(SPUtils.getHistory())
+                historyFragment.controlEmptyView()
             }
                 .setNegativeButton("取消") { dialog, _ -> dialog.dismiss() }.show()
         }
@@ -44,9 +46,10 @@ class MainActivity : AppCompatActivity() {
                 override fun getItemCount(): Int = 2
 
                 override fun createFragment(position: Int): Fragment {
-                    return if (position == 0) GenerateFragment() else HistoryFragment().apply {
+                    historyFragment = HistoryFragment().apply {
                         hisAdapter = historyAdapter
                     }
+                    return if (position == 0) GenerateFragment() else historyFragment
                 }
             }
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

@@ -28,10 +28,16 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
         }
     }
 
+    fun controlEmptyView() {
+        binding.emptyLayout.root.visibility =
+            if (SPUtils.getHistory().isEmpty()) View.VISIBLE else View.GONE
+    }
+
     override fun onResume() {
         super.onResume()
-        if (SPUtils.getHistory() != historyAdapter.data){
+        if (SPUtils.getHistory() != historyAdapter.data) {
             historyAdapter.setList(SPUtils.getHistory())
         }
+        controlEmptyView()
     }
 }

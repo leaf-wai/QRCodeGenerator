@@ -30,5 +30,4 @@ class HistoryAdapter : BaseQuickAdapter<String, BaseViewHolder>(R.layout.item_hi
         }
     }
 
-
 }

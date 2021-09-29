@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.leaf.qrcodegenerator.OverScrollLayout
+    <com.leaf.qrcodegenerator.widget.OverScrollLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="32dp"
@@ -20,8 +20,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:overScrollMode="never" />
-    </com.leaf.qrcodegenerator.OverScrollLayout>
+    </com.leaf.qrcodegenerator.widget.OverScrollLayout>
 
-
+    <include
+        android:id="@+id/emptyLayout"
+        layout="@layout/layout_empty_history" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

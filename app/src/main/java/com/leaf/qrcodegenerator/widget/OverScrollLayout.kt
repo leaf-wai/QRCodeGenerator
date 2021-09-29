@@ -1,4 +1,4 @@
-package com.leaf.qrcodegenerator
+package com.leaf.qrcodegenerator.widget
 
 import android.content.Context
 import android.graphics.Rect
