@@ -11,6 +11,7 @@ import com.dylanc.viewbinding.binding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import com.leaf.qrcodegenerator.databinding.ActivityMainBinding
+import com.leaf.qrcodegenerator.utils.AnimateUtils
 import com.leaf.qrcodegenerator.utils.SPUtils
 import com.leaf.qrcodegenerator.utils.StatusBarUtil
 import kotlin.math.abs
@@ -51,7 +52,13 @@ class MainActivity : AppCompatActivity() {
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    binding.deleteIv.visibility = if (position == 1) View.VISIBLE else View.GONE
+                    if (position == 0) {
+                        AnimateUtils.getGradientAlphaAnimation(binding.deleteIv, 1F, 0F, 100)
+                            .start()
+                    } else {
+                        AnimateUtils.getGradientAlphaAnimation(binding.deleteIv, 0F, 1F, 100)
+                            .start()
+                    }
                 }
             })
         }
