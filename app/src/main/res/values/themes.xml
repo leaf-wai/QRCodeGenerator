@@ -11,4 +11,10 @@
         <item name="android:textSize">32sp</item>
         <item name="android:letterSpacing">0.02</item>
     </style>
+
+    <style name="FixTabLayoutTextStyle">
+        <item name="android:fontFamily">@font/milanpro_w400</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
 </resources>

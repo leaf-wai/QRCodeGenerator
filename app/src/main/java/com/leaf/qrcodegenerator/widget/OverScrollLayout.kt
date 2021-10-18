@@ -134,13 +134,14 @@ class OverScrollLayout @JvmOverloads constructor(
      * @return true：可以，false:不可以
      */
     private fun canPullDown(): Boolean {
-        val firstVisiblePosition =
-            (childView.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-        if (firstVisiblePosition != 0 && childView.adapter?.itemCount != 0) {
-            return false
-        }
-        val mostTop = if (childView.childCount > 0) childView.getChildAt(0).top else 0
-        return mostTop >= 0
+//        val firstVisiblePosition =
+//            (childView.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+//        if (firstVisiblePosition != 0 && childView.adapter?.itemCount != 0) {
+//            return false
+//        }
+//        val mostTop = if (childView.childCount > 0) childView.getChildAt(0).top else 0
+//        return mostTop >= 0
+        return false
     }
 
     /**

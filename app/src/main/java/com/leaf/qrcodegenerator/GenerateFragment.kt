@@ -40,7 +40,7 @@ class GenerateFragment : Fragment(R.layout.fragment_generate) {
     }
 
     private fun setClipboard() {
-        if (ClipboardUtils.getClipboardContent(requireContext()) != "") {
+        if (ClipboardUtils.getClipboardContent(requireContext()).trim().isNotEmpty()) {
             binding.tvCb.text = ClipboardUtils.getClipboardContent(requireContext())
             binding.LLClipboard.visibility = View.VISIBLE
         } else
