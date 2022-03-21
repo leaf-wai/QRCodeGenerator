@@ -1,7 +1,8 @@
 package com.leaf.qrcodegenerator
 
 import android.app.Application
-import com.kongzue.dialog.util.DialogSettings
+import com.kongzue.dialogx.DialogX
+import com.kongzue.dialogx.style.MIUIStyle
 
 class App : Application() {
 
@@ -11,9 +12,8 @@ class App : Application() {
         initDialog()
     }
 
-    private fun initDialog(){
-        DialogSettings.style = DialogSettings.STYLE.STYLE_MIUI
-        DialogSettings.theme = DialogSettings.THEME.LIGHT
-        DialogSettings.init()
+    private fun initDialog() {
+        DialogX.init(this)
+        DialogX.globalStyle = MIUIStyle()
     }
 }

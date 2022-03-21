@@ -28,10 +28,6 @@ class QrCodeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         StatusBarUtil.lightStatusBar(this)
         setContentView(binding.root)
-        binding.statusBarFix.layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            StatusBarUtil.getStatusBarHeight(this)
-        )
         binding.FLBack.setOnClickListener { finish() }
         binding.ivQrCode.setImageBitmap(
             CodeUtils.createQRCode(
@@ -57,7 +53,7 @@ class QrCodeActivity : AppCompatActivity() {
             .onExplainRequestReason { scope, deniedList, _ ->
                 scope.showRequestReasonDialog(
                     deniedList,
-                    "二维码生成器 需要您同意以下权限才能保存二维码",
+                    "${getString(R.string.app_name)} 需要您同意以下权限才能保存二维码",
                     "确定",
                     "取消"
                 )

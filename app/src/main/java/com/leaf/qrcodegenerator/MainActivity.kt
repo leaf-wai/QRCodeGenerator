@@ -1,20 +1,24 @@
 package com.leaf.qrcodegenerator
 
+import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.dylanc.viewbinding.binding
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import com.kongzue.dialog.v3.MessageDialog
+import com.kongzue.dialogx.dialogs.MessageDialog
 import com.leaf.qrcodegenerator.databinding.ActivityMainBinding
-import com.leaf.qrcodegenerator.utils.AnimateUtils
 import com.leaf.qrcodegenerator.utils.SPUtils
 import com.leaf.qrcodegenerator.utils.StatusBarUtil
+import com.permissionx.guolindev.PermissionX
 import kotlin.math.abs
 
 
@@ -30,14 +34,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         StatusBarUtil.lightStatusBar(this)
         setContentView(binding.root)
-        binding.deleteIv.setOnClickListener {
-            MessageDialog.show(this, "提示", "确认清除历史记录？", "确定", "取消")
-                .setOnOkButtonClickListener { _, _ ->
-                    SPUtils.clearHistory()
-                    hisAdapter.setList(SPUtils.getHistory())
-                    historyFragment.controlEmptyView()
-                    false
-                }
+        binding.optionContainer.setOnClickListener {
+            if (binding.viewPager.currentItem == 0) {
+                //扫码
+                scanCode()
+            } else {
+                MessageDialog.show("提示", "确认清除历史记录？", "确定", "取消")
+                    .setOkButton { _, _ ->
+                        SPUtils.clearHistory()
+                        hisAdapter.setList(SPUtils.getHistory())
+                        historyFragment.controlEmptyView()
+                        false
+                    }
+            }
         }
         binding.viewPager.run {
             getChildAt(0).overScrollMode = View.OVER_SCROLL_NEVER
@@ -55,13 +64,20 @@ class MainActivity : AppCompatActivity() {
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    if (position == 0) {
-                        AnimateUtils.getGradientAlphaAnimation(binding.deleteIv, 1F, 0F, 100)
-                            .start()
-                    } else {
-                        AnimateUtils.getGradientAlphaAnimation(binding.deleteIv, 0F, 1F, 100)
-                            .start()
-                    }
+                    binding.optionIv.setImageDrawable(
+                        ContextCompat.getDrawable(
+                            this@MainActivity,
+                            if (position == 0) R.drawable.ic_scan else R.drawable.ic_delete
+                        )
+                    )
+                }
+
+                override fun onPageScrolled(
+                    position: Int,
+                    positionOffset: Float,
+                    positionOffsetPixels: Int
+                ) {
+                    super.onPageScrolled(position, positionOffset, positionOffsetPixels)
                 }
             })
         }
@@ -80,9 +96,42 @@ class MainActivity : AppCompatActivity() {
             val bigAlpha = 1 - smallAlpha
             binding.tabLayout.alpha = bigAlpha
             binding.fixTabLayout.alpha = smallAlpha
-            binding.tabLayout.visibility = if (abs(verticalOffset) >= appBarLayout.totalScrollRange) View.INVISIBLE else View.VISIBLE
+            binding.tabLayout.visibility =
+                if (abs(verticalOffset) >= appBarLayout.totalScrollRange) View.INVISIBLE else View.VISIBLE
         })
         binding.viewPagerContainer.disallowParentInterceptDownEvent(true)
+    }
+
+    private fun scanCode() {
+        PermissionX.init(this)
+            .permissions(
+                Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+            .explainReasonBeforeRequest()
+            .onExplainRequestReason { scope, deniedList, _ ->
+                scope.showRequestReasonDialog(
+                    deniedList,
+                    "${getString(R.string.app_name)} 需要您同意以下权限才能保存二维码",
+                    "确定",
+                    "取消"
+                )
+            }
+            .onForwardToSettings { scope, deniedList ->
+                scope.showForwardToSettingsDialog(
+                    deniedList,
+                    "您需要去应用程序设置当中手动开启权限",
+                    "确定"
+                )
+            }
+            .request { allGranted, _, deniedList ->
+                if (allGranted) {
+                    startActivity(Intent(this, ScanActivity::class.java))
+                } else {
+                    Toast.makeText(this, "您拒绝了如下权限：$deniedList", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
