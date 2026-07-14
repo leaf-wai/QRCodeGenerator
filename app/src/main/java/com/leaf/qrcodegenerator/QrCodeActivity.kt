@@ -6,8 +6,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -17,7 +15,6 @@ import com.leaf.qrcodegenerator.databinding.ActivityQrCodeBinding
 import com.leaf.qrcodegenerator.utils.StatusBarUtil
 import com.permissionx.guolindev.PermissionX
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -77,7 +74,7 @@ class QrCodeActivity : AppCompatActivity() {
 
     //协程处理保存图片
     private suspend fun savePhoto() {
-        withContext(Dispatchers.IO) {
+        val saved = withContext(Dispatchers.IO) {
             val bitmap: Bitmap = CodeUtils.createQRCode(
                 intent.getStringExtra("content"),
                 800
@@ -90,31 +87,18 @@ class QrCodeActivity : AppCompatActivity() {
             val saveUri: Uri = contentResolver.insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 content
-            ) ?: kotlin.run {
-                Toast.makeText(this@QrCodeActivity, "保存失败", Toast.LENGTH_SHORT).show()
-                return@withContext
-            }
+            ) ?: return@withContext false
             //保存图片
-            contentResolver.openOutputStream(saveUri).use {
-                if (bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)) { //90%的压缩率，it是输出流
-                    //在主线程提示用户
-                    MainScope().launch {
-                        Toast.makeText(
-                            this@QrCodeActivity,
-                            "保存成功",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else {
-                    MainScope().launch {
-                        Toast.makeText(
-                            this@QrCodeActivity,
-                            "保存失败",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+            val outputStream = contentResolver.openOutputStream(saveUri)
+                ?: return@withContext false
+            outputStream.use {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)
             }
         }
+        Toast.makeText(
+            this@QrCodeActivity,
+            if (saved) "保存成功" else "保存失败",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
