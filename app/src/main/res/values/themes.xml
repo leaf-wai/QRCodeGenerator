@@ -1,21 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimary">@color/blue</item>
-        <item name="colorPrimaryDark">@color/blue</item>
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:fontFamily">@font/milanpro_w400</item>
-    </style>
-
-    <style name="TabLayoutTextStyle">
-        <item name="android:fontFamily">@font/milanpro_w250</item>
-        <item name="android:textSize">32sp</item>
-        <item name="android:letterSpacing">0.02</item>
-    </style>
-
-    <style name="FixTabLayoutTextStyle">
-        <item name="android:fontFamily">@font/milanpro_w400</item>
-        <item name="android:textSize">20sp</item>
-        <item name="android:letterSpacing">0.02</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
     </style>
 </resources>

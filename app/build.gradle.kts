@@ -1,8 +1,10 @@
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 val localProperties = Properties().apply {
@@ -27,7 +29,7 @@ android {
 
     defaultConfig {
         applicationId = "com.leaf.qrcodegenerator"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 5
         versionName = "1.3.0"
@@ -36,7 +38,7 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
+        compose = true
     }
 
     buildTypes {
@@ -56,33 +58,34 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
 dependencies {
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.miuix.ui)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
-    implementation(libs.permissionx)
+    implementation(libs.androidx.camera.compose)
+    implementation(libs.androidx.camera.mlkit.vision)
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.zxing.lite)
-    implementation(libs.viewbinding.ktx)
-    implementation(libs.viewbinding.brvah)
-    implementation(libs.brvah)
+    implementation(libs.zxing.core)
     implementation(libs.mmkv)
-    implementation(libs.gson)
-    implementation(libs.dialogx.core)
-    implementation(libs.dialogx.miui.style)
+
+    debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.espresso.core)
 }

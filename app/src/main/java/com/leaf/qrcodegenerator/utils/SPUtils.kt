@@ -1,47 +1,39 @@
 package com.leaf.qrcodegenerator.utils
 
 import com.tencent.mmkv.MMKV
+import org.json.JSONArray
 
 object SPUtils {
-    private var kv: MMKV
     private const val HISTORY_KEY = "history"
+    private val kv: MMKV = MMKV.mmkvWithID(HISTORY_KEY, MMKV.MULTI_PROCESS_MODE)
 
-    init {
-        kv = MMKV.mmkvWithID(HISTORY_KEY, MMKV.MULTI_PROCESS_MODE)
-    }
-
-    //保存历史记录
     fun saveHistory(content: String) {
         if (content.isEmpty()) return
-        val historyData = kv.decodeString(HISTORY_KEY)
-        if (!historyData.isNullOrEmpty()) {
-            val historyList = GsonUtils.fromJsonList<String>(historyData) as ArrayList
-            for (str in historyList) {
-                if (str == content) {
-                    historyList.remove(str)
-                    break
-                }
-            }
-            historyList.add(0, content)
-            kv.encode(HISTORY_KEY, historyList.toJson())
-        } else {
-            clearHistory()
-        }
+        val history = readHistory()
+        history.remove(content)
+        history.add(0, content)
+        writeHistory(history)
     }
 
-    // 获取历史记录
-    fun getHistory(): List<String> {
-        val longHistory = kv.decodeString(HISTORY_KEY)
-        return if (!longHistory.isNullOrEmpty()) {
-            val historyList = GsonUtils.fromJsonList<String>(longHistory) as ArrayList
-            historyList
-        } else {
-            emptyList()
-        }
+    fun getHistory(): List<String> = readHistory()
+
+    fun clearHistory() = writeHistory(emptyList())
+
+    private fun readHistory(): MutableList<String> {
+        val raw = kv.decodeString(HISTORY_KEY).orEmpty()
+        if (raw.isEmpty()) return mutableListOf()
+
+        return runCatching {
+            val array = JSONArray(raw)
+            MutableList(array.length()) { index -> array.getString(index) }
+        }.getOrDefault(mutableListOf())
     }
 
-    // 清空历史记录
-    fun clearHistory() {
-        kv.encode(HISTORY_KEY, emptyList<String>().toJson())
+    private fun writeHistory(history: List<String>) {
+        val array = JSONArray()
+        for (item in history) {
+            array.put(item)
+        }
+        kv.encode(HISTORY_KEY, array.toString())
     }
 }
