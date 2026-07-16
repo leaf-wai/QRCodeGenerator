@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview as ComposePreview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -48,6 +47,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.ClipboardUtils
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -55,9 +55,9 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.extra.SuperDialog
 import java.util.concurrent.atomic.AtomicBoolean
+import androidx.compose.ui.tooling.preview.Preview as ComposePreview
 
 class ScanActivity : ComponentActivity() {
     private val scannerOptions = BarcodeScannerOptions.Builder()

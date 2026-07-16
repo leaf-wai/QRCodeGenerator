@@ -17,7 +17,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.defaultTextStyles
 
-val PageHorizontalPadding = 16.dp
+val PageHorizontalPadding = 26.dp
 
 val MiSansFontFamily = FontFamily(
     Font(R.font.misans_vf, FontWeight.Light),
