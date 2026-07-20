@@ -1,30 +1,58 @@
-# Gradle files
-.gradle/
-build/
-
-# Local configuration file (sdk path, etc)
-local.properties
-
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.apk
-output.json
-
-# IntelliJ
-*.iml
+# ====================================================================
+# Android Studio & IntelliJ IDEA
+# ====================================================================
 .idea/
+*.iml
+*.ipr
+*.iws
+.modules/
+build/
+capture/
+local.properties
+.navigation/
 
-# Keystore files
+# ====================================================================
+# Gradle and Build Outputs
+# ====================================================================
+.gradle/
+**/build/
+/build/
+
+# Ignore Gradle Signing Bags (Keystores)
+# 强烈建议不要把正式签名的 keystore 文件传到 Git 上
 *.jks
 *.keystore
+*.pk8
+*.p12
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+# ====================================================================
+# Kotlin & Java
+# ====================================================================
+# Kotlin 编译缓存
+.kotlin/
+.bsp/
 
-# Android Profiling
-*.hprof
+# ====================================================================
+# Log files & OS artifacts
+# ====================================================================
+*.log
+.DS_Store
+Thumbs.db
+
+# ====================================================================
+# Android Test & Profiling Outputs
+# ====================================================================
+*.apk
+*.ap_
+*.aab
+*.dex
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# ====================================================================
+# Optional: NDK/Native Crash log (If you are using Native C/C++)
+# ====================================================================
+# 如果项目涉及 C/C++ 调试，可以忽略本地生成的崩溃日志或临时符号表
+*.crash
+*.symbols
