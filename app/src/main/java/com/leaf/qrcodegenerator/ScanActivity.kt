@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -45,6 +46,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
+import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.ClipboardUtils
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -52,10 +54,10 @@ import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.ui.tooling.preview.Preview as ComposePreview
 
@@ -99,7 +101,7 @@ class ScanActivity : ComponentActivity() {
                     onDismissResult = ::resumeCamera,
                     onCopyResult = {
                         scanResult?.let { ClipboardUtils.copyToClipboard(this, it) }
-                        message = "已复制到剪贴板"
+                        message = getString(R.string.common_copied_to_clipboard)
                         resumeCamera()
                     },
                 )
@@ -109,7 +111,7 @@ class ScanActivity : ComponentActivity() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
-            message = "未获得相机权限"
+            message = getString(R.string.scan_camera_permission_missing)
         }
     }
 
@@ -121,7 +123,7 @@ class ScanActivity : ComponentActivity() {
                     cameraProvider = future.get()
                     bindCamera()
                 } catch (_: Exception) {
-                    message = "相机启动失败"
+                    message = getString(R.string.scan_camera_start_failed)
                 }
             },
             ContextCompat.getMainExecutor(this),
@@ -168,7 +170,7 @@ class ScanActivity : ComponentActivity() {
                 imageAnalysis,
             )
         } catch (_: Exception) {
-            message = "无法连接后置相机"
+            message = getString(R.string.scan_camera_connect_failed)
         }
     }
 
@@ -198,7 +200,7 @@ class ScanActivity : ComponentActivity() {
         } catch (_: Exception) {
             isPickingImage = false
             resultPending.set(false)
-            message = "无法读取所选图片"
+            message = getString(R.string.scan_image_read_failed)
             return
         }
 
@@ -207,7 +209,7 @@ class ScanActivity : ComponentActivity() {
                 val content = barcodes.firstNotNullOfOrNull { it.rawValue?.takeIf(String::isNotBlank) }
                 if (content == null) {
                     resultPending.set(false)
-                    message = "图片中未识别到二维码"
+                    message = getString(R.string.scan_image_no_qr_code)
                 } else {
                     cameraProvider?.unbindAll()
                     surfaceRequest = null
@@ -217,7 +219,7 @@ class ScanActivity : ComponentActivity() {
             }
             .addOnFailureListener {
                 resultPending.set(false)
-                message = "图片识别失败"
+                message = getString(R.string.scan_image_recognition_failed)
             }
             .addOnCompleteListener { isPickingImage = false }
     }
@@ -253,7 +255,7 @@ private fun ScanScreen(
 
     Scaffold(
         containerColor = Color.Black,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { _ ->
         Box(Modifier.fillMaxSize()) {
             surfaceRequest?.let {
@@ -274,27 +276,29 @@ private fun ScanScreen(
             ) {
                 IconButton(
                     onClick = onBack,
-                    backgroundColor = Color.Black.copy(alpha = 0.35f),
+                    backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                    minHeight = 35.dp,
+                    minWidth = 35.dp,
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_baseline_arrow_back_36),
-                        contentDescription = "返回",
-                        tint = Color.White,
+                        contentDescription = stringResource(R.string.common_back),
                         modifier = Modifier.size(28.dp),
                     )
                 }
                 IconButton(
                     onClick = onPickImage,
                     enabled = !isPickingImage,
-                    backgroundColor = Color.Black.copy(alpha = 0.35f),
+                    backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                    minHeight = 35.dp,
+                    minWidth = 35.dp,
                 ) {
                     if (isPickingImage) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), size = 24.dp)
                     } else {
                         Icon(
                             painter = painterResource(R.drawable.ic_gallery),
-                            contentDescription = "从相册识别",
-                            tint = Color.White,
+                            contentDescription = stringResource(R.string.scan_from_gallery),
                             modifier = Modifier.size(24.dp),
                         )
                     }
@@ -303,19 +307,19 @@ private fun ScanScreen(
 
             SuperDialog(
                 show = result != null,
-                title = "扫码结果",
+                title = stringResource(R.string.scan_result),
                 summary = result,
                 onDismissRequest = onDismissResult,
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     TextButton(
-                        text = "取消",
+                        text = stringResource(R.string.common_cancel),
                         onClick = onDismissResult,
                         modifier = Modifier.weight(1f),
                     )
                     Spacer(Modifier.size(16.dp))
                     TextButton(
-                        text = "复制到剪贴板",
+                        text = stringResource(R.string.scan_copy_result),
                         onClick = onCopyResult,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.textButtonColorsPrimary(),

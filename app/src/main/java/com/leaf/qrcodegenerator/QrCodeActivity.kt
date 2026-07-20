@@ -15,13 +15,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
+import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.createQrCode
 import kotlinx.coroutines.Dispatchers
@@ -49,12 +56,14 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 class QrCodeActivity : ComponentActivity() {
     private lateinit var content: String
@@ -63,7 +72,7 @@ class QrCodeActivity : ComponentActivity() {
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) saveQrCode() else saveMessage = "未获得存储权限"
+        if (granted) saveQrCode() else saveMessage = getString(R.string.qr_code_storage_permission_missing)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,7 +109,11 @@ class QrCodeActivity : ComponentActivity() {
 
     private fun saveQrCode() {
         lifecycleScope.launch {
-            saveMessage = if (savePhoto()) "保存成功" else "保存失败"
+            saveMessage = if (savePhoto()) {
+                getString(R.string.qr_code_save_success)
+            } else {
+                getString(R.string.qr_code_save_failed)
+            }
         }
     }
 
@@ -151,6 +164,7 @@ private fun QrCodeScreen(
     onSave: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val scrollBehavior = MiuixScrollBehavior()
     val foregroundColor = MiuixTheme.colorScheme.onSurface.toArgb()
     val bitmap = remember(content, foregroundColor) {
         createQrCode(
@@ -168,41 +182,53 @@ private fun QrCodeScreen(
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
-                title = "二维码",
+            TopAppBar(
+                title = stringResource(R.string.qr_code_title),
+                largeTitle = stringResource(R.string.qr_code_title),
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.padding(start = PageHorizontalPadding)) {
                         Icon(
                             painter = painterResource(R.drawable.ic_baseline_arrow_back_36),
-                            contentDescription = "返回",
+                            contentDescription = stringResource(R.string.common_back),
                             modifier = Modifier.size(28.dp),
                         )
                     }
                 },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = PageHorizontalPadding),
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .scrollEndHaptic()
+                .overScrollVertical()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            contentPadding = PaddingValues(top = paddingValues.calculateTopPadding()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top,
         ) {
-            Spacer(Modifier.height(64.dp))
-            Image(
-                bitmap = bitmap,
-                contentDescription = "生成的二维码",
-                modifier = Modifier.size(280.dp),
-            )
-            Spacer(Modifier.height(32.dp))
-            Button(
-                onClick = onSave,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColorsPrimary(),
-            ) {
-                Text("保存二维码", fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+            item { Spacer(Modifier.height(64.dp)) }
+            item {
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = stringResource(R.string.qr_code_image_description),
+                    modifier = Modifier.size(280.dp),
+                )
             }
+            item { Spacer(Modifier.height(32.dp)) }
+            item {
+                Button(
+                    onClick = onSave,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = PageHorizontalPadding),
+                    colors = ButtonDefaults.buttonColorsPrimary(),
+                ) {
+                    Text(stringResource(R.string.qr_code_save), fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                }
+            }
+            item { Spacer(Modifier.height(24.dp).navigationBarsPadding()) }
         }
     }
 }

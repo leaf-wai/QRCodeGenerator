@@ -13,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,8 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -50,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.leaf.qrcodegenerator.ui.MiSansBoldFontFamily
+import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.ClipboardUtils
@@ -64,7 +63,7 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -73,6 +72,8 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.extra.SuperDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 class MainActivity : ComponentActivity() {
     private var history by mutableStateOf<List<String>>(emptyList())
@@ -88,7 +89,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        refreshContent()
+        refreshHistory()
         setContent {
             QrCodeGeneratorTheme {
                 MainScreen(
@@ -102,7 +103,7 @@ class MainActivity : ComponentActivity() {
                     onCopy = { ClipboardUtils.copyToClipboard(this, it) },
                     onClearHistory = {
                         SPUtils.clearHistory()
-                        refreshContent()
+                        refreshHistory()
                     },
                 )
             }
@@ -111,12 +112,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshContent()
+        refreshHistory()
     }
 
-    private fun refreshContent() {
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            clipboardText = ClipboardUtils.getClipboardContent(this).trim()
+        }
+    }
+
+    private fun refreshHistory() {
         history = SPUtils.getHistory()
-        clipboardText = ClipboardUtils.getClipboardContent(this).trim()
     }
 
     private fun showQrCode(content: String) {
@@ -163,6 +170,10 @@ private fun MainScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = MiuixScrollBehavior()
+    val generateTitle = stringResource(R.string.main_generate)
+    val historyTitle = stringResource(R.string.main_history)
+    val emptyContentMessage = stringResource(R.string.main_empty_content)
+    val copiedMessage = stringResource(R.string.common_copied_to_clipboard)
     val appTextStyles = MiuixTheme.textStyles
     val topAppBarTextStyles = remember(appTextStyles) {
         appTextStyles.copy(
@@ -176,22 +187,29 @@ private fun MainScreen(
         topBar = {
             MiuixTheme(textStyles = topAppBarTextStyles) {
                 TopAppBar(
-                    title = if (pagerState.currentPage == 0) "生成" else "历史",
-                    largeTitle = if (pagerState.currentPage == 0) "生成二维码" else "历史记录",
+                    title = if (pagerState.currentPage == 0) generateTitle else historyTitle,
+                    largeTitle = if (pagerState.currentPage == 0) {
+                        stringResource(R.string.main_generate_qr_code)
+                    } else {
+                        stringResource(R.string.main_history_records)
+                    },
                     scrollBehavior = scrollBehavior,
                     actions = {
                         IconButton(
                             onClick = if (pagerState.currentPage == 0) onScan else { { showClearDialog = true } },
                             modifier = Modifier.padding(end = PageHorizontalPadding),
+                            backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                            minHeight = 35.dp,
+                            minWidth = 35.dp,
                         ) {
                             Icon(
                                 painter = painterResource(
                                     if (pagerState.currentPage == 0) R.drawable.ic_scan else R.drawable.ic_delete,
                                 ),
                                 contentDescription = if (pagerState.currentPage == 0) {
-                                    "扫描二维码"
+                                    stringResource(R.string.main_scan_qr_code)
                                 } else {
-                                    "清空历史记录"
+                                    stringResource(R.string.main_clear_history)
                                 },
                                 modifier = Modifier.size(22.dp),
                             )
@@ -207,20 +225,20 @@ private fun MainScreen(
                     selected = pagerState.currentPage == 0,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
                     icon = ImageVector.vectorResource(R.drawable.ic_generate),
-                    label = "生成",
+                    label = generateTitle,
                 )
                 NavigationBarItem(
                     modifier = Modifier.weight(1f),
                     selected = pagerState.currentPage == 1,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
                     icon = ImageVector.vectorResource(R.drawable.ic_history),
-                    label = "历史",
+                    label = historyTitle,
                 )
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        Box(Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
@@ -229,18 +247,26 @@ private fun MainScreen(
                 if (page == 0) {
                     GeneratePage(
                         clipboardText = clipboardText,
+                        bottomPadding = paddingValues.calculateBottomPadding(),
+                        scrollBehavior = scrollBehavior,
                         onGenerate = onGenerate,
                         onEmptyContent = {
-                            coroutineScope.launch { snackbarHostState.showSnackbar("内容不能为空") }
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(emptyContentMessage)
+                            }
                         },
                     )
                 } else {
                     HistoryPage(
                         history = history,
+                        bottomPadding = paddingValues.calculateBottomPadding(),
+                        scrollBehavior = scrollBehavior,
                         onOpen = onGenerate,
                         onCopy = {
                             onCopy(it)
-                            coroutineScope.launch { snackbarHostState.showSnackbar("已复制到剪贴板") }
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(copiedMessage)
+                            }
                         },
                     )
                 }
@@ -248,12 +274,12 @@ private fun MainScreen(
 
             SuperDialog(
                 show = showClearDialog,
-                title = "提示",
-                summary = "确认清除历史记录？",
+                title = stringResource(R.string.common_notice),
+                summary = stringResource(R.string.main_confirm_clear_history),
                 onDismissRequest = { showClearDialog = false },
             ) {
                 DialogActions(
-                    confirmText = "确定",
+                    confirmText = stringResource(R.string.common_confirm),
                     onConfirm = {
                         onClearHistory()
                         showClearDialog = false
@@ -264,12 +290,12 @@ private fun MainScreen(
 
             SuperDialog(
                 show = showCameraPermissionDialog,
-                title = "需要相机权限",
-                summary = "请在系统设置中允许相机权限后再扫描二维码。",
+                title = stringResource(R.string.main_camera_permission_required),
+                summary = stringResource(R.string.main_camera_permission_summary),
                 onDismissRequest = onDismissPermissionDialog,
             ) {
                 DialogActions(
-                    confirmText = "去设置",
+                    confirmText = stringResource(R.string.main_open_settings),
                     onConfirm = onOpenSettings,
                     onCancel = onDismissPermissionDialog,
                 )
@@ -281,61 +307,81 @@ private fun MainScreen(
 @Composable
 private fun GeneratePage(
     clipboardText: String,
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    scrollBehavior: ScrollBehavior,
     onGenerate: (String) -> Unit,
     onEmptyContent: () -> Unit,
 ) {
     var content by remember { mutableStateOf(TextFieldValue()) }
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = PageHorizontalPadding, vertical = 16.dp),
+            .scrollEndHaptic()
+            .overScrollVertical()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentPadding = PaddingValues(
+            start = PageHorizontalPadding,
+            end = PageHorizontalPadding,
+            bottom = bottomPadding,
+        ),
     ) {
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            modifier = Modifier.fillMaxWidth().height(220.dp),
-            label = "内容",
-            minLines = 9,
-            maxLines = 9,
-        )
-        Spacer(Modifier.height(20.dp))
-        Button(
-            onClick = {
-                val value = content.text.trim()
-                if (value.isEmpty()) onEmptyContent() else onGenerate(value)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColorsPrimary(),
-        ) {
-            Text("生成二维码", fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+        item { Spacer(Modifier.height(12.dp)) }
+        item {
+            TextField(
+                value = content,
+                onValueChange = { content = it },
+                modifier = Modifier.fillMaxWidth().height(220.dp),
+                label = stringResource(R.string.main_content_label),
+                minLines = 9,
+                maxLines = 9,
+            )
+        }
+        item { Spacer(Modifier.height(20.dp)) }
+        item {
+            Button(
+                onClick = {
+                    val value = content.text.trim()
+                    if (value.isEmpty()) onEmptyContent() else onGenerate(value)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColorsPrimary(),
+            ) {
+                Text(stringResource(R.string.main_generate_qr_code), fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+            }
         }
 
         if (clipboardText.isNotEmpty()) {
-            Spacer(Modifier.height(32.dp))
-            Text(
-                text = "剪贴板",
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                style = MiuixTheme.textStyles.footnote1,
-                fontWeight = FontWeight.Medium,
-            )
-            Spacer(Modifier.height(10.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                cornerRadius = 20.dp,
-                insideMargin = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
-                pressFeedbackType = PressFeedbackType.Sink,
-                onClick = { onGenerate(clipboardText) },
-            ) {
-                Text(clipboardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            item { Spacer(Modifier.height(32.dp)) }
+            item {
+                Text(
+                    text = stringResource(R.string.main_clipboard),
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MiuixTheme.textStyles.footnote1,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+            item { Spacer(Modifier.height(10.dp)) }
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 20.dp,
+                    insideMargin = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
+                    pressFeedbackType = PressFeedbackType.Sink,
+                    onClick = { onGenerate(clipboardText) },
+                ) {
+                    Text(clipboardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
             }
         }
+        item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
 @Composable
 private fun HistoryPage(
     history: List<String>,
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    scrollBehavior: ScrollBehavior,
     onOpen: (String) -> Unit,
     onCopy: (String) -> Unit,
 ) {
@@ -343,7 +389,7 @@ private fun HistoryPage(
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Image(
                 painter = painterResource(R.drawable.empty_history),
-                contentDescription = "暂无历史记录",
+                contentDescription = stringResource(R.string.main_empty_history),
                 modifier = Modifier.size(width = 144.dp, height = 129.dp),
                 contentScale = ContentScale.Fit,
             )
@@ -352,13 +398,18 @@ private fun HistoryPage(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = PageHorizontalPadding, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxSize().scrollEndHaptic().overScrollVertical()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentPadding = PaddingValues(
+            start = PageHorizontalPadding,
+            end = PageHorizontalPadding,
+            bottom = bottomPadding,
+        ),
     ) {
+        item { Spacer(Modifier.height(12.dp)) }
         items(history, key = { it }) { item ->
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                 cornerRadius = 20.dp,
                 insideMargin = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
                 pressFeedbackType = PressFeedbackType.Sink,
@@ -368,6 +419,7 @@ private fun HistoryPage(
                 Text(item, maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
         }
+        item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
@@ -377,13 +429,12 @@ private fun DialogActions(
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         TextButton(
-            text = "取消",
+            text = stringResource(R.string.common_cancel),
             onClick = onCancel,
             modifier = Modifier.weight(1f),
         )
-        Spacer(Modifier.width(16.dp))
         TextButton(
             text = confirmText,
             onClick = onConfirm,
@@ -417,6 +468,8 @@ private fun GeneratePagePreview() {
     QrCodeGeneratorTheme {
         GeneratePage(
             clipboardText = "https://compose-miuix-ui.github.io/miuix/",
+            bottomPadding = 0.dp,
+            scrollBehavior = MiuixScrollBehavior(),
             onGenerate = {},
             onEmptyContent = {},
         )
@@ -433,6 +486,8 @@ private fun HistoryPagePreview() {
                 "Jetpack Compose 可预览界面",
                 "https://developer.android.com/jetpack/compose",
             ),
+            bottomPadding = 0.dp,
+            scrollBehavior = MiuixScrollBehavior(),
             onOpen = {},
             onCopy = {},
         )
@@ -445,6 +500,8 @@ private fun EmptyHistoryPagePreview() {
     QrCodeGeneratorTheme {
         HistoryPage(
             history = emptyList(),
+            bottomPadding = 0.dp,
+            scrollBehavior = MiuixScrollBehavior(),
             onOpen = {},
             onCopy = {},
         )

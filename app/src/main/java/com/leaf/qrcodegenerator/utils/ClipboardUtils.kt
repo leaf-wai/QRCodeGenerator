@@ -12,13 +12,15 @@ object ClipboardUtils {
 
     fun getClipboardContent(context: Context): String {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clipData = clipboard.primaryClip
-        if (clipData == null || clipData.itemCount <= 0) {
-            return ""
-        }
-        val item = clipData.getItemAt(0)
-        return if (item == null || item.text == null) {
+        return try {
+            val clipData = clipboard.primaryClip
+            if (clipData == null || clipData.itemCount == 0) {
+                ""
+            } else {
+                clipData.getItemAt(0).coerceToText(context)?.toString().orEmpty()
+            }
+        } catch (_: SecurityException) {
             ""
-        } else item.text.toString()
+        }
     }
 }

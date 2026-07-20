@@ -17,7 +17,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.defaultTextStyles
 
-val PageHorizontalPadding = 26.dp
+val PageHorizontalPadding = 16.dp
 
 val MiSansFontFamily = FontFamily(
     Font(R.font.misans_vf, FontWeight.Light),
@@ -52,7 +52,7 @@ private fun miSansStyle(
 ).lineHeight()
 
 private val AppTextStyles = defaultTextStyles(
-    main = miSansStyle(17),
+    main = miSansStyle(14),
     paragraph = miSansStyle(17) { copy(lineHeight = 1.2.em) },
     body1 = miSansStyle(16),
     body2 = miSansStyle(14),

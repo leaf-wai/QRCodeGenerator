@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">二维码生成器</string>
     <string name="main_generate">生成</string>
     <string name="main_history">历史</string>
     <string name="main_generate_qr_code">生成二维码</string>
