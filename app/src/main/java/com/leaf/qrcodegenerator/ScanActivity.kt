@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -57,7 +56,9 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.extra.SuperDialog
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Photos
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.ui.tooling.preview.Preview as ComposePreview
 
@@ -274,32 +275,23 @@ private fun ScanScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(
-                    onClick = onBack,
-                    backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
-                    minHeight = 35.dp,
-                    minWidth = 35.dp,
-                ) {
+                IconButton(onClick = onBack) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_baseline_arrow_back_36),
+                        imageVector = MiuixIcons.Back,
                         contentDescription = stringResource(R.string.common_back),
                         modifier = Modifier.size(28.dp),
+                        tint = Color.White,
                     )
                 }
-                IconButton(
-                    onClick = onPickImage,
-                    enabled = !isPickingImage,
-                    backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
-                    minHeight = 35.dp,
-                    minWidth = 35.dp,
-                ) {
+                IconButton(onClick = onPickImage, enabled = !isPickingImage) {
                     if (isPickingImage) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), size = 24.dp)
                     } else {
                         Icon(
-                            painter = painterResource(R.drawable.ic_gallery),
+                            imageVector = MiuixIcons.Photos,
                             contentDescription = stringResource(R.string.scan_from_gallery),
                             modifier = Modifier.size(24.dp),
+                            tint = Color.White,
                         )
                     }
                 }

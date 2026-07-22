@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,14 +20,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +43,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,7 +53,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.leaf.qrcodegenerator.ui.MiSansBoldFontFamily
 import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
@@ -57,6 +62,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -70,6 +76,12 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Create
+import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.Recent
+import top.yukonga.miuix.kmp.icon.extended.Scan
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -101,8 +113,8 @@ class MainActivity : ComponentActivity() {
                     onScan = ::requestCameraAndScan,
                     onGenerate = ::showQrCode,
                     onCopy = { ClipboardUtils.copyToClipboard(this, it) },
-                    onClearHistory = {
-                        SPUtils.clearHistory()
+                    onDeleteHistory = {
+                        SPUtils.deleteHistory(it)
                         refreshHistory()
                     },
                 )
@@ -133,7 +145,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestCameraAndScan() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             openScanner()
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -164,7 +180,7 @@ private fun MainScreen(
     onScan: () -> Unit,
     onGenerate: (String) -> Unit,
     onCopy: (String) -> Unit,
-    onClearHistory: () -> Unit,
+    onDeleteHistory: (Set<String>) -> Unit,
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
@@ -175,70 +191,149 @@ private fun MainScreen(
     val emptyContentMessage = stringResource(R.string.main_empty_content)
     val copiedMessage = stringResource(R.string.common_copied_to_clipboard)
     val appTextStyles = MiuixTheme.textStyles
-    val topAppBarTextStyles = remember(appTextStyles) {
-        appTextStyles.copy(
-            main = appTextStyles.main.copy(fontFamily = MiSansBoldFontFamily),
-        )
+    var isHistorySelectionMode by remember { mutableStateOf(false) }
+    var selectedHistoryItems by remember { mutableStateOf(emptySet<String>()) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val exitHistorySelection = {
+        isHistorySelectionMode = false
+        selectedHistoryItems = emptySet()
     }
-    var showClearDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = isHistorySelectionMode && pagerState.currentPage == 1) {
+        exitHistorySelection()
+    }
+
+    LaunchedEffect(history) {
+        selectedHistoryItems = selectedHistoryItems.intersect(history.toSet())
+        if (history.isEmpty()) exitHistorySelection()
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != 1) exitHistorySelection()
+    }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MiuixTheme(textStyles = topAppBarTextStyles) {
+            MiuixTheme {
                 TopAppBar(
-                    title = if (pagerState.currentPage == 0) generateTitle else historyTitle,
-                    largeTitle = if (pagerState.currentPage == 0) {
+                    title = when {
+                    pagerState.currentPage == 0 -> generateTitle
+                    isHistorySelectionMode -> stringResource(
+                        R.string.main_selected_history_count,
+                        selectedHistoryItems.size,
+                    )
+
+                    else -> historyTitle
+                }, largeTitle = when {
+                    pagerState.currentPage == 0 -> {
                         stringResource(R.string.main_generate_qr_code)
-                    } else {
+                    }
+
+                    isHistorySelectionMode -> stringResource(
+                        R.string.main_selected_history_count,
+                        selectedHistoryItems.size,
+                    )
+
+                    else -> {
                         stringResource(R.string.main_history_records)
-                    },
-                    scrollBehavior = scrollBehavior,
-                    actions = {
+                    }
+                }, scrollBehavior = scrollBehavior, navigationIcon = {
+                    if (isHistorySelectionMode && pagerState.currentPage == 1) {
                         IconButton(
-                            onClick = if (pagerState.currentPage == 0) onScan else { { showClearDialog = true } },
-                            modifier = Modifier.padding(end = PageHorizontalPadding),
-                            backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
-                            minHeight = 35.dp,
-                            minWidth = 35.dp,
+                            onClick = exitHistorySelection,
+                            modifier = Modifier.padding(start = PageHorizontalPadding),
                         ) {
                             Icon(
-                                painter = painterResource(
-                                    if (pagerState.currentPage == 0) R.drawable.ic_scan else R.drawable.ic_delete,
-                                ),
-                                contentDescription = if (pagerState.currentPage == 0) {
-                                    stringResource(R.string.main_scan_qr_code)
-                                } else {
-                                    stringResource(R.string.main_clear_history)
-                                },
-                                modifier = Modifier.size(22.dp),
+                                imageVector = MiuixIcons.Close,
+                                contentDescription = stringResource(R.string.common_cancel),
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     }
-                )
+                }, actions = {
+                    if (isHistorySelectionMode && pagerState.currentPage == 1) {
+                        val allSelected = selectedHistoryItems.size == history.size
+                        val selectAllDescription = stringResource(R.string.common_select_all)
+                        Checkbox(
+                            state = if (allSelected) ToggleableState.On else ToggleableState.Off,
+                            onClick = {
+                                selectedHistoryItems =
+                                    if (allSelected) emptySet() else history.toSet()
+                            },
+                            modifier = Modifier
+                                .padding(end = PageHorizontalPadding)
+                                .semantics {
+                                    contentDescription = selectAllDescription
+                                },
+                        )
+                    } else {
+                        IconButton(
+                            onClick = if (pagerState.currentPage == 0) onScan else {
+                                { if (history.isNotEmpty()) isHistorySelectionMode = true }
+                            },
+                            enabled = pagerState.currentPage == 0 || history.isNotEmpty(),
+                            modifier = Modifier.padding(end = PageHorizontalPadding),
+                        ) {
+                            Icon(
+                                imageVector = if (pagerState.currentPage == 0) {
+                                    MiuixIcons.Scan
+                                } else {
+                                    MiuixIcons.Delete
+                                },
+                                contentDescription = if (pagerState.currentPage == 0) {
+                                    stringResource(R.string.main_scan_qr_code)
+                                } else {
+                                    stringResource(R.string.main_select_history_to_delete)
+                                },
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+                })
             }
         },
         bottomBar = {
             NavigationBar {
-                NavigationBarItem(
-                    modifier = Modifier.weight(1f),
-                    selected = pagerState.currentPage == 0,
-                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
-                    icon = ImageVector.vectorResource(R.drawable.ic_generate),
-                    label = generateTitle,
-                )
-                NavigationBarItem(
-                    modifier = Modifier.weight(1f),
-                    selected = pagerState.currentPage == 1,
-                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
-                    icon = ImageVector.vectorResource(R.drawable.ic_history),
-                    label = historyTitle,
-                )
+                if (isHistorySelectionMode && pagerState.currentPage == 1) {
+                    NavigationBarItem(
+                        modifier = Modifier.weight(1f),
+                        selected = true,
+                        onClick = { showDeleteDialog = true },
+                        enabled = selectedHistoryItems.isNotEmpty(),
+                        icon = MiuixIcons.Delete,
+                        label = stringResource(R.string.main_delete_selected_history_count),
+                    )
+                } else {
+                    NavigationBarItem(
+                        modifier = Modifier.weight(1f),
+                        selected = pagerState.currentPage == 0,
+                        onClick = {
+                            exitHistorySelection()
+                            coroutineScope.launch { pagerState.animateScrollToPage(0) }
+                        },
+                        icon = ImageVector.vectorResource(R.drawable.ic_generate),
+                        label = generateTitle,
+                    )
+                    NavigationBarItem(
+                        modifier = Modifier.weight(1f),
+                        selected = pagerState.currentPage == 1,
+                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                        icon = MiuixIcons.Recent,
+                        label = historyTitle,
+                    )
+                }
             }
         },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        Box(Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding())
+        ) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
@@ -268,23 +363,36 @@ private fun MainScreen(
                                 snackbarHostState.showSnackbar(copiedMessage)
                             }
                         },
+                        selectionMode = isHistorySelectionMode,
+                        selectedItems = selectedHistoryItems,
+                        onToggleSelection = { item ->
+                            selectedHistoryItems = if (item in selectedHistoryItems) {
+                                selectedHistoryItems - item
+                            } else {
+                                selectedHistoryItems + item
+                            }
+                        },
                     )
                 }
             }
 
             SuperDialog(
-                show = showClearDialog,
+                show = showDeleteDialog,
                 title = stringResource(R.string.common_notice),
-                summary = stringResource(R.string.main_confirm_clear_history),
-                onDismissRequest = { showClearDialog = false },
+                summary = stringResource(
+                    R.string.main_confirm_delete_selected_history,
+                    selectedHistoryItems.size,
+                ),
+                onDismissRequest = { showDeleteDialog = false },
             ) {
                 DialogActions(
                     confirmText = stringResource(R.string.common_confirm),
                     onConfirm = {
-                        onClearHistory()
-                        showClearDialog = false
+                        onDeleteHistory(selectedHistoryItems)
+                        showDeleteDialog = false
+                        exitHistorySelection()
                     },
-                    onCancel = { showClearDialog = false },
+                    onCancel = { showDeleteDialog = false },
                 )
             }
 
@@ -330,7 +438,9 @@ private fun GeneratePage(
             TextField(
                 value = content,
                 onValueChange = { content = it },
-                modifier = Modifier.fillMaxWidth().height(220.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
                 label = stringResource(R.string.main_content_label),
                 minLines = 9,
                 maxLines = 9,
@@ -346,7 +456,11 @@ private fun GeneratePage(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColorsPrimary(),
             ) {
-                Text(stringResource(R.string.main_generate_qr_code), fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                Text(
+                    stringResource(R.string.main_generate_qr_code),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp
+                )
             }
         }
 
@@ -369,7 +483,12 @@ private fun GeneratePage(
                     pressFeedbackType = PressFeedbackType.Sink,
                     onClick = { onGenerate(clipboardText) },
                 ) {
-                    Text(clipboardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        clipboardText,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
@@ -384,6 +503,9 @@ private fun HistoryPage(
     scrollBehavior: ScrollBehavior,
     onOpen: (String) -> Unit,
     onCopy: (String) -> Unit,
+    selectionMode: Boolean,
+    selectedItems: Set<String>,
+    onToggleSelection: (String) -> Unit,
 ) {
     if (history.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -398,7 +520,10 @@ private fun HistoryPage(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().scrollEndHaptic().overScrollVertical()
+        modifier = Modifier
+            .fillMaxSize()
+            .scrollEndHaptic()
+            .overScrollVertical()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         contentPadding = PaddingValues(
             start = PageHorizontalPadding,
@@ -407,16 +532,41 @@ private fun HistoryPage(
         ),
     ) {
         item { Spacer(Modifier.height(12.dp)) }
-        items(history, key = { it }) { item ->
+        itemsIndexed(history, key = { index, item -> "$index:$item" }) { _, item ->
+            val isSelected = item in selectedItems
             Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
                 cornerRadius = 20.dp,
                 insideMargin = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
                 pressFeedbackType = PressFeedbackType.Sink,
-                onClick = { onOpen(item) },
-                onLongPress = { onCopy(item) },
+                onClick = {
+                    if (selectionMode) onToggleSelection(item) else onOpen(item)
+                },
+                onLongPress = if (selectionMode) null else {
+                    { onCopy(item) }
+                },
             ) {
-                Text(item, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                Row(
+                    modifier = Modifier.heightIn(min = 26.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = item,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    if (selectionMode) {
+                        Spacer(Modifier.width(12.dp))
+                        Checkbox(
+                            state = if (isSelected) ToggleableState.On else ToggleableState.Off,
+                            onClick = { onToggleSelection(item) },
+                        )
+                    }
+                }
             }
         }
         item { Spacer(Modifier.height(24.dp)) }
@@ -457,7 +607,7 @@ private fun MainScreenPreview() {
             onScan = {},
             onGenerate = {},
             onCopy = {},
-            onClearHistory = {},
+            onDeleteHistory = {},
         )
     }
 }
@@ -490,6 +640,9 @@ private fun HistoryPagePreview() {
             scrollBehavior = MiuixScrollBehavior(),
             onOpen = {},
             onCopy = {},
+            selectionMode = true,
+            selectedItems = setOf("Jetpack Compose 可预览界面"),
+            onToggleSelection = {},
         )
     }
 }
@@ -504,6 +657,9 @@ private fun EmptyHistoryPagePreview() {
             scrollBehavior = MiuixScrollBehavior(),
             onOpen = {},
             onCopy = {},
+            selectionMode = false,
+            selectedItems = emptySet(),
+            onToggleSelection = {},
         )
     }
 }
@@ -512,7 +668,11 @@ private fun EmptyHistoryPagePreview() {
 @Composable
 private fun DialogActionsPreview() {
     QrCodeGeneratorTheme {
-        Box(Modifier.fillMaxWidth().padding(24.dp)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+        ) {
             DialogActions(
                 confirmText = "确定",
                 onConfirm = {},

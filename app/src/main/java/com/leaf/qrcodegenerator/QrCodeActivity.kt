@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +60,8 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -72,7 +73,8 @@ class QrCodeActivity : ComponentActivity() {
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) saveQrCode() else saveMessage = getString(R.string.qr_code_storage_permission_missing)
+        if (granted) saveQrCode() else saveMessage =
+            getString(R.string.qr_code_storage_permission_missing)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,7 +101,10 @@ class QrCodeActivity : ComponentActivity() {
 
     private fun requestStorageAndSave() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             saveQrCode()
         } else {
@@ -123,7 +128,10 @@ class QrCodeActivity : ComponentActivity() {
             put(MediaStore.Images.Media.DISPLAY_NAME, "QRCode_${System.currentTimeMillis()}.png")
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/QRCodeGenerator")
+                put(
+                    MediaStore.Images.Media.RELATIVE_PATH,
+                    "${Environment.DIRECTORY_PICTURES}/QRCodeGenerator"
+                )
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
         }
@@ -182,16 +190,21 @@ private fun QrCodeScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = stringResource(R.string.qr_code_title),
                 largeTitle = stringResource(R.string.qr_code_title),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.padding(start = PageHorizontalPadding)) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.padding(start = PageHorizontalPadding)
+                    ) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_baseline_arrow_back_36),
+                            imageVector = MiuixIcons.Back,
                             contentDescription = stringResource(R.string.common_back),
                             modifier = Modifier.size(28.dp),
                         )
@@ -222,13 +235,21 @@ private fun QrCodeScreen(
             item {
                 Button(
                     onClick = onSave,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = PageHorizontalPadding),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = PageHorizontalPadding),
                     colors = ButtonDefaults.buttonColorsPrimary(),
                 ) {
-                    Text(stringResource(R.string.qr_code_save), fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                    Text(
+                        stringResource(R.string.qr_code_save),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 20.sp
+                    )
                 }
             }
-            item { Spacer(Modifier.height(24.dp).navigationBarsPadding()) }
+            item { Spacer(Modifier
+                .height(24.dp)
+                .navigationBarsPadding()) }
         }
     }
 }

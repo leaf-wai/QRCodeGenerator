@@ -17,6 +17,11 @@ object SPUtils {
 
     fun getHistory(): List<String> = readHistory()
 
+    fun deleteHistory(contents: Set<String>) {
+        if (contents.isEmpty()) return
+        writeHistory(readHistory().filterNot(contents::contains))
+    }
+
     fun clearHistory() = writeHistory(emptyList())
 
     private fun readHistory(): MutableList<String> {

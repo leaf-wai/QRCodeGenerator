@@ -9,6 +9,7 @@
     <string name="common_copied_to_clipboard">已复制到剪贴板</string>
     <string name="common_cancel">取消</string>
     <string name="common_confirm">确定</string>
+    <string name="common_select_all">全选</string>
     <string name="common_back">返回</string>
     <string name="common_notice">提示</string>
     <string name="main_confirm_clear_history">确认清除历史记录？</string>
@@ -18,6 +19,11 @@
     <string name="main_content_label">内容</string>
     <string name="main_clipboard">剪贴板</string>
     <string name="main_empty_history">暂无历史记录</string>
+    <string name="main_select_history_to_delete">选择要删除的历史记录</string>
+    <string name="main_selected_history_count">已选择 %1$d 项</string>
+    <string name="main_delete_selected_history">删除选中的历史记录</string>
+    <string name="main_delete_selected_history_count">删除</string>
+    <string name="main_confirm_delete_selected_history">确认删除选中的 %1$d 条历史记录？</string>
     <string name="scan_from_gallery">从相册识别</string>
     <string name="scan_result">扫码结果</string>
     <string name="scan_copy_result">复制到剪贴板</string>

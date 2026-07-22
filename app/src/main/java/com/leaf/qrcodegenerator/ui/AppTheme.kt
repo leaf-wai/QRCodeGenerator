@@ -19,26 +19,15 @@ import top.yukonga.miuix.kmp.theme.defaultTextStyles
 
 val PageHorizontalPadding = 16.dp
 
-val MiSansFontFamily = FontFamily(
-    Font(R.font.misans_vf, FontWeight.Light),
-    Font(R.font.misans_vf, FontWeight.Normal),
-    Font(R.font.misans_vf, FontWeight.Medium),
-    Font(R.font.misans_vf, FontWeight.SemiBold),
-    Font(R.font.misans_vf, FontWeight.Bold),
-)
-
 @OptIn(ExperimentalTextApi::class)
-val MiSansBoldFontFamily = FontFamily(
-    Font(
-        resId = R.font.misans_vf,
-        weight = FontWeight.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500)),
-    ),
-    Font(
-        resId = R.font.misans_vf,
-        weight = FontWeight.Medium,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500)),
-    ),
+val MiSansFontFamily = FontFamily(
+    Font(R.font.misans_vf, FontWeight.Light, variationSettings = FontVariation.Settings(FontVariation.weight(300))),
+    Font(R.font.misans_vf, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+    Font(R.font.misans_vf, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+    Font(R.font.misans_vf, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+    Font(R.font.misans_vf, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
+    Font(R.font.misans_vf, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))),
+    Font(R.font.misans_vf, FontWeight.Black, variationSettings = FontVariation.Settings(FontVariation.weight(900))),
 )
 
 private fun miSansStyle(
