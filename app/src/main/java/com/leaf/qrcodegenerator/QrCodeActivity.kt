@@ -1,18 +1,14 @@
 package com.leaf.qrcodegenerator
 
 import android.Manifest
-import android.content.ContentValues
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,9 +26,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -43,14 +37,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.createQrCode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.leaf.qrcodegenerator.viewmodel.QrCodeViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -68,13 +60,14 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 class QrCodeActivity : ComponentActivity() {
     private lateinit var content: String
-    private var saveMessage by mutableStateOf<String?>(null)
+    private val viewModel: QrCodeViewModel by viewModels {
+        QrCodeViewModel.factory(applicationContext)
+    }
 
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) saveQrCode() else saveMessage =
-            getString(R.string.qr_code_storage_permission_missing)
+        if (granted) saveQrCode() else viewModel.showStoragePermissionMissing()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,10 +81,12 @@ class QrCodeActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             QrCodeGeneratorTheme {
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 QrCodeScreen(
                     content = content,
-                    message = saveMessage,
-                    onMessageShown = { saveMessage = null },
+                    message = uiState.messageRes?.let(::getString),
+                    isSaving = uiState.isSaving,
+                    onMessageShown = viewModel::consumeMessage,
                     onBack = ::finish,
                     onSave = ::requestStorageAndSave,
                 )
@@ -113,53 +108,7 @@ class QrCodeActivity : ComponentActivity() {
     }
 
     private fun saveQrCode() {
-        lifecycleScope.launch {
-            saveMessage = if (savePhoto()) {
-                getString(R.string.qr_code_save_success)
-            } else {
-                getString(R.string.qr_code_save_failed)
-            }
-        }
-    }
-
-    private suspend fun savePhoto(): Boolean = withContext(Dispatchers.IO) {
-        val bitmap = createQrCode(content, 800)
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "QRCode_${System.currentTimeMillis()}.png")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(
-                    MediaStore.Images.Media.RELATIVE_PATH,
-                    "${Environment.DIRECTORY_PICTURES}/QRCodeGenerator"
-                )
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
-        }
-
-        var saveUri: Uri? = null
-        try {
-            saveUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-                ?: return@withContext false
-            val saved = contentResolver.openOutputStream(saveUri)?.use { stream ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            } ?: false
-            if (!saved) {
-                contentResolver.delete(saveUri, null, null)
-                return@withContext false
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                contentResolver.update(
-                    saveUri,
-                    ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) },
-                    null,
-                    null,
-                )
-            }
-            true
-        } catch (_: Exception) {
-            saveUri?.let { contentResolver.delete(it, null, null) }
-            false
-        }
+        viewModel.save(content)
     }
 }
 
@@ -167,6 +116,7 @@ class QrCodeActivity : ComponentActivity() {
 private fun QrCodeScreen(
     content: String,
     message: String?,
+    isSaving: Boolean,
     onMessageShown: () -> Unit,
     onBack: () -> Unit,
     onSave: () -> Unit,
@@ -235,6 +185,7 @@ private fun QrCodeScreen(
             item {
                 Button(
                     onClick = onSave,
+                    enabled = !isSaving,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = PageHorizontalPadding),
@@ -261,6 +212,7 @@ private fun QrCodeScreenPreview() {
         QrCodeScreen(
             content = "https://compose-miuix-ui.github.io/miuix/",
             message = null,
+            isSaving = false,
             onMessageShown = {},
             onBack = {},
             onSave = {},

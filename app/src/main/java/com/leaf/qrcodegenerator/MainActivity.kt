@@ -11,6 +11,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,11 +54,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.ClipboardUtils
-import com.leaf.qrcodegenerator.utils.SPUtils
+import com.leaf.qrcodegenerator.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -78,7 +80,6 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.extra.SuperDialog
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Close
-import top.yukonga.miuix.kmp.icon.extended.Create
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Recent
 import top.yukonga.miuix.kmp.icon.extended.Scan
@@ -88,35 +89,30 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 class MainActivity : ComponentActivity() {
-    private var history by mutableStateOf<List<String>>(emptyList())
-    private var clipboardText by mutableStateOf("")
-    private var showCameraPermissionDialog by mutableStateOf(false)
+    private val viewModel: MainViewModel by viewModels()
 
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) openScanner() else showCameraPermissionDialog = true
+        if (granted) openScanner() else viewModel.showCameraPermissionDialog()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        refreshHistory()
         setContent {
             QrCodeGeneratorTheme {
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 MainScreen(
-                    history = history,
-                    clipboardText = clipboardText,
-                    showCameraPermissionDialog = showCameraPermissionDialog,
-                    onDismissPermissionDialog = { showCameraPermissionDialog = false },
+                    history = uiState.history,
+                    clipboardText = uiState.clipboardText,
+                    showCameraPermissionDialog = uiState.showCameraPermissionDialog,
+                    onDismissPermissionDialog = viewModel::dismissCameraPermissionDialog,
                     onOpenSettings = ::openAppSettings,
                     onScan = ::requestCameraAndScan,
                     onGenerate = ::showQrCode,
                     onCopy = { ClipboardUtils.copyToClipboard(this, it) },
-                    onDeleteHistory = {
-                        SPUtils.deleteHistory(it)
-                        refreshHistory()
-                    },
+                    onDeleteHistory = viewModel::deleteHistory,
                 )
             }
         }
@@ -124,23 +120,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshHistory()
+        viewModel.refreshHistory()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            clipboardText = ClipboardUtils.getClipboardContent(this).trim()
+            viewModel.updateClipboard(ClipboardUtils.getClipboardContent(this))
         }
     }
 
-    private fun refreshHistory() {
-        history = SPUtils.getHistory()
-    }
-
     private fun showQrCode(content: String) {
-        SPUtils.saveHistory(content)
-        history = SPUtils.getHistory()
+        viewModel.saveHistory(content)
         startActivity(Intent(this, QrCodeActivity::class.java).putExtra("content", content))
     }
 
@@ -161,7 +152,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openAppSettings() {
-        showCameraPermissionDialog = false
+        viewModel.dismissCameraPermissionDialog()
         startActivity(
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.fromParts("package", packageName, null)
@@ -190,7 +181,6 @@ private fun MainScreen(
     val historyTitle = stringResource(R.string.main_history)
     val emptyContentMessage = stringResource(R.string.main_empty_content)
     val copiedMessage = stringResource(R.string.common_copied_to_clipboard)
-    val appTextStyles = MiuixTheme.textStyles
     var isHistorySelectionMode by remember { mutableStateOf(false) }
     var selectedHistoryItems by remember { mutableStateOf(emptySet<String>()) }
     var showDeleteDialog by remember { mutableStateOf(false) }

@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -39,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -48,6 +50,7 @@ import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.ClipboardUtils
+import com.leaf.qrcodegenerator.viewmodel.ScanViewModel
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
@@ -63,6 +66,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.ui.tooling.preview.Preview as ComposePreview
 
 class ScanActivity : ComponentActivity() {
+    private val viewModel: ScanViewModel by viewModels()
     private val scannerOptions = BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE, Barcode.FORMAT_AZTEC)
         .build()
@@ -71,15 +75,12 @@ class ScanActivity : ComponentActivity() {
 
     private var cameraProvider: ProcessCameraProvider? = null
     private var surfaceRequest by mutableStateOf<SurfaceRequest?>(null)
-    private var scanResult by mutableStateOf<String?>(null)
-    private var message by mutableStateOf<String?>(null)
-    private var isPickingImage by mutableStateOf(false)
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
         if (uri == null) {
-            isPickingImage = false
+            viewModel.finishPickingImage()
             resultPending.set(false)
         } else {
             recognizeFromGallery(uri)
@@ -91,18 +92,21 @@ class ScanActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             QrCodeGeneratorTheme {
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 ScanScreen(
                     surfaceRequest = surfaceRequest,
-                    result = scanResult,
-                    message = message,
-                    isPickingImage = isPickingImage,
-                    onMessageShown = { message = null },
+                    result = uiState.result,
+                    message = uiState.messageRes?.let(::getString),
+                    isPickingImage = uiState.isPickingImage,
+                    onMessageShown = viewModel::consumeMessage,
                     onBack = ::finish,
                     onPickImage = ::pickImage,
                     onDismissResult = ::resumeCamera,
                     onCopyResult = {
-                        scanResult?.let { ClipboardUtils.copyToClipboard(this, it) }
-                        message = getString(R.string.common_copied_to_clipboard)
+                        viewModel.uiState.value.result?.let {
+                            ClipboardUtils.copyToClipboard(this, it)
+                        }
+                        viewModel.showCopiedMessage()
                         resumeCamera()
                     },
                 )
@@ -112,7 +116,7 @@ class ScanActivity : ComponentActivity() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
-            message = getString(R.string.scan_camera_permission_missing)
+            viewModel.showCameraPermissionMissing()
         }
     }
 
@@ -122,9 +126,9 @@ class ScanActivity : ComponentActivity() {
             {
                 try {
                     cameraProvider = future.get()
-                    bindCamera()
+                    if (viewModel.uiState.value.result == null) bindCamera()
                 } catch (_: Exception) {
-                    message = getString(R.string.scan_camera_start_failed)
+                    viewModel.showCameraStartFailed()
                 }
             },
             ContextCompat.getMainExecutor(this),
@@ -171,7 +175,7 @@ class ScanActivity : ComponentActivity() {
                 imageAnalysis,
             )
         } catch (_: Exception) {
-            message = getString(R.string.scan_camera_connect_failed)
+            viewModel.showCameraConnectFailed()
         }
     }
 
@@ -179,16 +183,16 @@ class ScanActivity : ComponentActivity() {
         if (!resultPending.compareAndSet(false, true)) return
         cameraProvider?.unbindAll()
         surfaceRequest = null
-        scanResult = content
+        viewModel.showResult(content)
     }
 
     private fun resumeCamera() {
-        scanResult = null
+        viewModel.dismissResult()
         bindCamera()
     }
 
     private fun pickImage() {
-        isPickingImage = true
+        viewModel.startPickingImage()
         resultPending.set(true)
         pickImageLauncher.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
@@ -199,9 +203,9 @@ class ScanActivity : ComponentActivity() {
         val image = try {
             InputImage.fromFilePath(this, uri)
         } catch (_: Exception) {
-            isPickingImage = false
+            viewModel.finishPickingImage()
             resultPending.set(false)
-            message = getString(R.string.scan_image_read_failed)
+            viewModel.showImageReadFailed()
             return
         }
 
@@ -210,19 +214,19 @@ class ScanActivity : ComponentActivity() {
                 val content = barcodes.firstNotNullOfOrNull { it.rawValue?.takeIf(String::isNotBlank) }
                 if (content == null) {
                     resultPending.set(false)
-                    message = getString(R.string.scan_image_no_qr_code)
+                    viewModel.showImageNotFound()
                 } else {
                     cameraProvider?.unbindAll()
                     surfaceRequest = null
                     resultPending.set(true)
-                    scanResult = content
+                    viewModel.showResult(content)
                 }
             }
             .addOnFailureListener {
                 resultPending.set(false)
-                message = getString(R.string.scan_image_recognition_failed)
+                viewModel.showImageRecognitionFailed()
             }
-            .addOnCompleteListener { isPickingImage = false }
+            .addOnCompleteListener { viewModel.finishPickingImage() }
     }
 
     override fun onDestroy() {

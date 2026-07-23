@@ -1,3 +1,43 @@
+## 项目结构
+
+本项目采用轻量 MVVM + 单向数据流，不引入完整 MVI、依赖注入框架或额外的 domain 层。当前源码结构如下：
+
+```text
+com.leaf.qrcodegenerator/
+├── App.kt                         # Application 入口
+├── ApplicationHolder.kt           # 初始化并持有 Application、MMKV
+├── MainActivity.kt                # 生成页与历史记录页；权限、导航等系统交互
+├── QrCodeActivity.kt              # 二维码展示页；存储权限等系统交互
+├── ScanActivity.kt                # 扫描页；CameraX、ActivityResult 和硬件生命周期
+├── data/
+│   ├── HistoryRepository.kt       # 历史记录接口与 MMKV 实现
+│   └── QrCodeImageStore.kt        # 二维码图片存储接口与 MediaStore 实现
+├── viewmodel/
+│   ├── MainViewModel.kt           # 历史记录、剪贴板和权限弹窗状态
+│   ├── QrCodeViewModel.kt         # 二维码保存状态与结果消息
+│   └── ScanViewModel.kt           # 扫描结果、图库进度和提示消息
+├── ui/
+│   ├── AppTheme.kt                # 应用主题
+│   └── AppSnackbarHost.kt         # 通用 SnackbarHost
+└── utils/
+    ├── ClipboardUtils.kt          # 剪贴板系统操作
+    ├── QrCodeUtils.kt             # 二维码位图生成
+    └── SPUtils.kt                 # MMKV 底层读写，仅由 data 层封装
+```
+
+单元测试按生产代码包结构放在 `app/src/test/java/com/leaf/qrcodegenerator/`，ViewModel 测试位于 `viewmodel/`。
+
+### 分层边界
+
+- **Activity**：只负责权限、页面跳转、`ActivityResultLauncher`、CameraX 绑定等必须依赖 Android 生命周期的系统交互；不得直接读写 MMKV 或维护业务状态。
+- **Composable**：只渲染传入状态并向上回调用户操作。文本框内容、选择模式、确认框等纯 UI 临时状态可以使用 `remember` / `rememberSaveable` 留在 Composable。
+- **ViewModel**：每个页面通过一个 `@Immutable UiState` 和只读 `StateFlow` 暴露状态；公开方法处理用户操作和状态转换，不持有 Activity、Composable、CameraProvider 或 SurfaceRequest。
+- **data**：封装持久化和外部数据操作。上层依赖接口（如 `HistoryRepository`、`QrCodeImageStore`），具体实现负责 MMKV、MediaStore 等 Android API。
+- **utils**：只放无状态或底层平台工具；业务代码不得绕过 data 层直接调用 `SPUtils`。
+- **状态收集**：Composable 使用 `collectAsStateWithLifecycle()`，不得使用普通 `collectAsState()` 收集 ViewModel Flow。
+- **一次性消息**：ViewModel 在 UiState 中暴露字符串资源 ID，UI 显示后调用 `consumeMessage()`；ViewModel 中不得持有 `Context` 来解析界面文案。
+- **测试**：新增或修改 ViewModel 状态转换、Repository 交互时同步补充 JVM 单元测试。系统权限、CameraX 和 MediaStore 仍通过 Activity/数据实现边界隔离。
+
 ## UI 规范
 
 - 所有 UI 组件使用 miuix（Card、TopAppBar、NavigationBar、SmallTitle、TextButton 等）；miuix 组件（Card/Button/IconButton/TextField/NavigationBar/Dialog…）内部已用 squircle 渲染圆角，直接用即可，无需处理
