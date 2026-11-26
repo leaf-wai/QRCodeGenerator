@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -51,6 +52,9 @@ import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.ClipboardUtils
 import com.leaf.qrcodegenerator.viewmodel.ScanViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
@@ -62,6 +66,8 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Photos
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.ui.tooling.preview.Preview as ComposePreview
 
@@ -71,6 +77,9 @@ class ScanActivity : ComponentActivity() {
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE, Barcode.FORMAT_AZTEC)
         .build()
     private val barcodeScanner: BarcodeScanner by lazy { BarcodeScanning.getClient(scannerOptions) }
+    private val cameraAnalysisExecutor: ExecutorService by lazy {
+        Executors.newSingleThreadExecutor()
+    }
     private val resultPending = AtomicBoolean(false)
 
     private var cameraProvider: ProcessCameraProvider? = null
@@ -151,8 +160,9 @@ class ScanActivity : ComponentActivity() {
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .apply {
+                // 相机帧分析在独立后台线程执行，仅将识别结果回调到主线程
                 setAnalyzer(
-                    ContextCompat.getMainExecutor(this@ScanActivity),
+                    cameraAnalysisExecutor,
                     MlKitAnalyzer(
                         listOf(barcodeScanner),
                         ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL,
@@ -200,41 +210,44 @@ class ScanActivity : ComponentActivity() {
     }
 
     private fun recognizeFromGallery(uri: Uri) {
-        val image = try {
-            InputImage.fromFilePath(this, uri)
-        } catch (_: Exception) {
-            viewModel.finishPickingImage()
-            resultPending.set(false)
-            viewModel.showImageReadFailed()
-            return
-        }
-
-        barcodeScanner.process(image)
-            .addOnSuccessListener { barcodes ->
-                val content = barcodes.firstNotNullOfOrNull { it.rawValue?.takeIf(String::isNotBlank) }
-                if (content == null) {
-                    resultPending.set(false)
-                    viewModel.showImageNotFound()
-                } else {
-                    cameraProvider?.unbindAll()
-                    surfaceRequest = null
-                    resultPending.set(true)
-                    viewModel.showResult(content)
-                }
+        lifecycleScope.launch {
+            val image = withContext(Dispatchers.IO) {
+                runCatching { InputImage.fromFilePath(this@ScanActivity, uri) }.getOrNull()
             }
-            .addOnFailureListener {
+            if (image == null) {
+                viewModel.finishPickingImage()
                 resultPending.set(false)
-                viewModel.showImageRecognitionFailed()
+                viewModel.showImageReadFailed()
+                return@launch
             }
-            .addOnCompleteListener { viewModel.finishPickingImage() }
+
+            barcodeScanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    val content = barcodes.firstNotNullOfOrNull { it.rawValue?.takeIf(String::isNotBlank) }
+                    if (content == null) {
+                        resultPending.set(false)
+                        viewModel.showImageNotFound()
+                    } else {
+                        cameraProvider?.unbindAll()
+                        surfaceRequest = null
+                        resultPending.set(true)
+                        viewModel.showResult(content)
+                    }
+                }
+                .addOnFailureListener {
+                    resultPending.set(false)
+                    viewModel.showImageRecognitionFailed()
+                }
+                .addOnCompleteListener { viewModel.finishPickingImage() }
+        }
     }
 
     override fun onDestroy() {
         cameraProvider?.unbindAll()
+        cameraAnalysisExecutor.shutdown()
         barcodeScanner.close()
         super.onDestroy()
     }
-
 }
 
 @Composable

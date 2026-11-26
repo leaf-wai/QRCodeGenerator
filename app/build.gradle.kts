@@ -47,6 +47,20 @@ android {
         }
     }
 
+    androidResources {
+        localeFilters += listOf("zh", "zh-rCN")
+    }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/androidx/**",
+                "DebugProbesKt.bin",
+            )
+        }
+    }
+
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {
@@ -93,10 +107,11 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.zxing.core)
-    implementation(libs.mmkv)
+    implementation(libs.androidx.datastore.preferences)
 
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
 }

@@ -36,7 +36,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -45,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,7 +106,9 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels {
+        MainViewModel.factory(applicationContext)
+    }
 
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -134,11 +137,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshHistory()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -237,7 +235,7 @@ private fun MainScreen(
     val historyTitle = stringResource(R.string.main_history)
     val emptyContentMessage = stringResource(R.string.main_empty_content)
     val copiedMessage = stringResource(R.string.common_copied_to_clipboard)
-    var isHistorySelectionMode by remember { mutableStateOf(initialHistorySelectionMode) }
+    var isHistorySelectionMode by rememberSaveable { mutableStateOf(initialHistorySelectionMode) }
     var selectedHistoryItems by remember { mutableStateOf(initialSelectedHistoryItems) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val showHistorySelectionToolbar = isHistorySelectionMode && pagerState.currentPage == 1
@@ -513,7 +511,9 @@ private fun GeneratePage(
     onGenerate: (String) -> Unit,
     onEmptyContent: () -> Unit,
 ) {
-    var content by remember { mutableStateOf(TextFieldValue()) }
+    var content by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue())
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -625,7 +625,7 @@ private fun HistoryPage(
         ),
     ) {
         item { Spacer(Modifier.height(12.dp)) }
-        itemsIndexed(history, key = { index, item -> "$index:$item" }) { _, item ->
+        items(history, key = { it }) { item ->
             val isSelected = item in selectedItems
             Card(
                 modifier = Modifier

@@ -11,7 +11,7 @@
 - **文本生成二维码**：支持任意 UTF-8 文本快速生成二维码（M 级纠错），展示高清二维码并支持保存 PNG 图片至系统相册（`Pictures/QRCodeGenerator`）。
 - **剪贴板快捷生成**：应用进入前台时自动检测剪贴板文本，点击卡片即可一键生成二维码。
 - **相机实时扫描与相册识别**：基于 CameraX 与 Google ML Kit，支持后置相机实时扫描（QR Code / Aztec）及通过系统相册选取图片识别二维码，识别结果支持一键复制到剪贴板。
-- **历史记录管理**：使用 MMKV 本地持久化生成记录，支持点击再次查看二维码、长按复制内容、多选批量删除与全选/取消全选。
+- **历史记录管理**：使用 Jetpack DataStore 本地持久化生成记录，支持点击再次查看二维码、长按复制内容、多选批量删除与全选/取消全选。
 - **现代视觉体验**：采用 Miuix 设计语言与 MiSans 可变字体，支持系统深浅色主题切换、Edge-to-Edge 全面屏、Android 12+ SplashScreen 启动动画及 Android 13 主题图标。
 
 ## 环境要求
@@ -31,13 +31,11 @@
 
 ```text
 app/src/main/java/com/leaf/qrcodegenerator/
-├── App.kt                    # Application 入口
-├── ApplicationHolder.kt      # 初始化并持有 Application、MMKV
 ├── MainActivity.kt           # 生成页与历史记录页；权限、导航等系统交互
 ├── QrCodeActivity.kt         # 二维码展示页；保存权限与展示
 ├── ScanActivity.kt           # 扫描页；CameraX、ML Kit 与相册选图
 ├── data/
-│   ├── HistoryRepository.kt  # 历史记录接口与 MMKV 实现
+│   ├── HistoryRepository.kt  # 历史记录接口与 Preferences DataStore 实现
 │   └── QrCodeImageStore.kt   # 二维码图片存储接口与 MediaStore 实现
 ├── viewmodel/
 │   ├── MainViewModel.kt      # 历史记录、剪贴板和权限弹窗状态
@@ -48,8 +46,7 @@ app/src/main/java/com/leaf/qrcodegenerator/
 │   └── AppSnackbarHost.kt    # 通用 SnackbarHost
 └── utils/
     ├── ClipboardUtils.kt     # 剪贴板系统操作
-    ├── QrCodeUtils.kt        # ZXing 二维码位图生成
-    └── SPUtils.kt            # MMKV 底层读写封装
+    └── QrCodeUtils.kt        # ZXing 二维码位图生成
 ```
 
 ## 本地构建与测试
@@ -107,7 +104,7 @@ app/src/main/java/com/leaf/qrcodegenerator/
 | [AndroidX](https://developer.android.com/jetpack/androidx) (`core-ktx`, `core-splashscreen`, `activity-compose`, `lifecycle`) | Android 基础扩展、启动页动画与生命周期组件 | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [AndroidX CameraX](https://developer.android.com/training/camerax) (`camera-core`, `camera2`, `lifecycle`, `compose`, `mlkit-vision`) | 相机预览与图像分析框架 | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [ZXing (Zebra Crossing)](https://github.com/zxing/zxing) (`com.google.zxing:core`) | 二维码编码生成 | [Apache-2.0](https://github.com/zxing/zxing/blob/master/LICENSE) |
-| [Tencent MMKV](https://github.com/Tencent/MMKV) (`com.tencent:mmkv-static`) | 高性能轻量级本地键值存储 | [BSD-3-Clause](https://github.com/Tencent/MMKV/blob/master/LICENSE.TXT) |
+| [AndroidX DataStore](https://developer.android.com/topic/libraries/architecture/datastore) (`datastore-preferences`) | 异步轻量级本地键值持久化存储 | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [Google ML Kit Barcode Scanning](https://developers.google.com/ml-kit/vision/barcode-scanning) (`com.google.mlkit:barcode-scanning`) | 端侧二维码与条码识别引擎 | [Google APIs Terms of Service](https://developers.google.com/ml-kit/terms) |
 | [JUnit 4](https://github.com/junit-team/junit4) & [AndroidX Test](https://developer.android.com/training/testing) | 单元测试与仪器化测试框架 | [EPL-1.0](https://github.com/junit-team/junit4/blob/main/LICENSE-junit.txt) / [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [MiSans](https://hyperos.mi.com/font/zh/) (`misans_vf.ttf`) | 应用内置可变无衬线字体 | MiSans 字体知识产权许可协议（版权归小米科技有限责任公司所有） |
@@ -132,4 +129,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-> 本项目所引用的第三方开源库、SDK 与字体资源（包括但不限于 Miuix、ZXing、MMKV、AndroidX、Google ML Kit 与 MiSans 字体）的版权均归其各自原作者或版权方所有，并遵循其原始许可协议。
+> 本项目所引用的第三方开源库、SDK 与字体资源（包括但不限于 Miuix、ZXing、AndroidX、Google ML Kit 与 MiSans 字体）的版权均归其各自原作者或版权方所有，并遵循其原始许可协议。

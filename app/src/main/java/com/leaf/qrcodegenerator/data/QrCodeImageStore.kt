@@ -3,6 +3,7 @@ package com.leaf.qrcodegenerator.data
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -19,7 +20,15 @@ class MediaStoreQrCodeImageStore(
     private val contentResolver: ContentResolver,
 ) : QrCodeImageStore {
     override suspend fun save(content: String): Boolean = withContext(Dispatchers.IO) {
-        val bitmap = createQrCode(content, 800)
+        // 保存到相册时使用白底黑码并保留白边，避免深色相册背景下无法识别
+        val bitmap = createQrCode(
+            content = content,
+            size = 800,
+            foregroundColor = Color.BLACK,
+            backgroundColor = Color.WHITE,
+            margin = 2,
+        ) ?: return@withContext false
+
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "QRCode_${System.currentTimeMillis()}.png")
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
@@ -55,6 +64,8 @@ class MediaStoreQrCodeImageStore(
         } catch (_: Exception) {
             saveUri?.let { contentResolver.delete(it, null, null) }
             false
+        } finally {
+            bitmap.recycle()
         }
     }
 }

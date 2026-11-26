@@ -10,10 +10,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,29 +20,35 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.AppSnackbarHost
+import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
 import com.leaf.qrcodegenerator.ui.QrCodeGeneratorTheme
 import com.leaf.qrcodegenerator.utils.createQrCode
 import com.leaf.qrcodegenerator.viewmodel.QrCodeViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -98,7 +102,7 @@ class QrCodeActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P ||
             ContextCompat.checkSelfPermission(
                 this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             saveQrCode()
@@ -110,6 +114,12 @@ class QrCodeActivity : ComponentActivity() {
     private fun saveQrCode() {
         viewModel.save(content)
     }
+}
+
+private sealed interface QrCodeBitmapState {
+    data object Loading : QrCodeBitmapState
+    data class Ready(val bitmap: ImageBitmap) : QrCodeBitmapState
+    data object Failed : QrCodeBitmapState
 }
 
 @Composable
@@ -124,12 +134,23 @@ private fun QrCodeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = MiuixScrollBehavior()
     val foregroundColor = MiuixTheme.colorScheme.onSurface.toArgb()
-    val bitmap = remember(content, foregroundColor) {
-        createQrCode(
-            content = content,
-            size = 800,
-            foregroundColor = foregroundColor,
-        ).asImageBitmap()
+    val bitmapState by produceState<QrCodeBitmapState>(
+        initialValue = QrCodeBitmapState.Loading,
+        content,
+        foregroundColor,
+    ) {
+        val bitmap = withContext(Dispatchers.Default) {
+            createQrCode(
+                content = content,
+                size = 800,
+                foregroundColor = foregroundColor,
+            )?.asImageBitmap()
+        }
+        value = if (bitmap != null) {
+            QrCodeBitmapState.Ready(bitmap)
+        } else {
+            QrCodeBitmapState.Failed
+        }
     }
 
     LaunchedEffect(message) {
@@ -172,17 +193,39 @@ private fun QrCodeScreen(
         ) {
             item { Spacer(Modifier.height(64.dp)) }
             item {
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = stringResource(R.string.qr_code_image_description),
+                Box(
                     modifier = Modifier.size(280.dp),
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    when (val state = bitmapState) {
+                        QrCodeBitmapState.Loading -> {
+                            CircularProgressIndicator(modifier = Modifier.size(32.dp), size = 32.dp)
+                        }
+
+                        is QrCodeBitmapState.Ready -> {
+                            Image(
+                                bitmap = state.bitmap,
+                                contentDescription = stringResource(R.string.qr_code_image_description),
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+
+                        QrCodeBitmapState.Failed -> {
+                            Text(
+                                text = stringResource(R.string.qr_code_generate_failed),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = PageHorizontalPadding),
+                            )
+                        }
+                    }
+                }
             }
             item { Spacer(Modifier.height(32.dp)) }
             item {
                 Button(
                     onClick = onSave,
-                    enabled = !isSaving,
+                    enabled = !isSaving && bitmapState is QrCodeBitmapState.Ready,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = PageHorizontalPadding),
@@ -191,13 +234,17 @@ private fun QrCodeScreen(
                     Text(
                         stringResource(R.string.qr_code_save),
                         fontWeight = FontWeight.Medium,
-                        fontSize = 20.sp
+                        fontSize = 20.sp,
                     )
                 }
             }
-            item { Spacer(Modifier
-                .height(24.dp)
-                .navigationBarsPadding()) }
+            item {
+                Spacer(
+                    Modifier
+                        .height(24.dp)
+                        .navigationBarsPadding(),
+                )
+            }
         }
     }
 }

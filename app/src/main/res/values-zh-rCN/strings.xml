@@ -4,7 +4,6 @@
     <string name="main_generate_qr_code">生成二维码</string>
     <string name="main_history_records">历史记录</string>
     <string name="main_scan_qr_code">扫描二维码</string>
-    <string name="main_clear_history">清空历史记录</string>
     <string name="main_empty_content">内容不能为空</string>
     <string name="common_copied_to_clipboard">已复制到剪贴板</string>
     <string name="common_cancel">取消</string>
@@ -13,7 +12,6 @@
     <string name="common_deselect_all">取消全选</string>
     <string name="common_back">返回</string>
     <string name="common_notice">提示</string>
-    <string name="main_confirm_clear_history">确认清除历史记录？</string>
     <string name="main_camera_permission_required">需要相机权限</string>
     <string name="main_camera_permission_summary">请在系统设置中允许相机权限后再扫描二维码。</string>
     <string name="main_open_settings">去设置</string>
@@ -23,7 +21,6 @@
     <string name="main_select_history_to_delete">选择要删除的历史记录</string>
     <string name="main_selected_history_count">已选择 %1$d 项</string>
     <string name="main_delete_selected_history">删除选中的历史记录</string>
-    <string name="main_delete_selected_history_count">删除</string>
     <string name="main_confirm_delete_selected_history">确认删除选中的 %1$d 条历史记录？</string>
     <string name="scan_from_gallery">从相册识别</string>
     <string name="scan_result">扫码结果</string>
@@ -36,6 +33,7 @@
     <string name="scan_image_recognition_failed">图片识别失败</string>
     <string name="qr_code_title">二维码</string>
     <string name="qr_code_image_description">生成的二维码</string>
+    <string name="qr_code_generate_failed">内容过长或无法生成二维码</string>
     <string name="qr_code_save">保存二维码</string>
     <string name="qr_code_storage_permission_missing">未获得存储权限</string>
     <string name="qr_code_save_success">保存成功</string>
