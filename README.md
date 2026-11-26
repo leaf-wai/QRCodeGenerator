@@ -19,7 +19,7 @@
 | 项目 | 配置 |
 | --- | --- |
 | 最低系统版本 (`minSdk`) | Android 7.0 (API 24) |
-| 目标系统版本 (`targetSdk`) | Android 16 (API 36) |
+| 目标系统版本 (`targetSdk`) | Android 17 (API 37) |
 | 编译版本 (`compileSdk`) | API 37 |
 | 支持架构 (`abiFilters`) | `armeabi-v7a`, `arm64-v8a` |
 | Gradle / AGP | Gradle 9.6.0 / AGP 9.5.2 |

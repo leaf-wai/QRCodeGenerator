@@ -36,9 +36,9 @@ android {
     defaultConfig {
         applicationId = "com.leaf.qrcodegenerator"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 201
-        versionName = "2.0.1"
+        targetSdk = 37
+        versionCode = 210
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
