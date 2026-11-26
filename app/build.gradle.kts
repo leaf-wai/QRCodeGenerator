@@ -13,7 +13,7 @@ val localProperties = Properties().apply {
 
 android {
     namespace = "com.leaf.qrcodegenerator"
-    compileSdk = 36
+    compileSdk = 37
 
     signingConfigs {
         create("release") {
@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         applicationId = "com.leaf.qrcodegenerator"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = 201
         versionName = "2.0.1"
@@ -76,8 +76,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.miuix.ui)
-    implementation(libs.miuix.icons)
+    implementation(libs.bundles.miuix)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)

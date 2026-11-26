@@ -77,12 +77,12 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.extra.SuperDialog
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Recent
 import top.yukonga.miuix.kmp.icon.extended.Scan
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -366,7 +366,7 @@ private fun MainScreen(
                 }
             }
 
-            SuperDialog(
+            OverlayDialog(
                 show = showDeleteDialog,
                 title = stringResource(R.string.common_notice),
                 summary = stringResource(
@@ -386,7 +386,7 @@ private fun MainScreen(
                 )
             }
 
-            SuperDialog(
+            OverlayDialog(
                 show = showCameraPermissionDialog,
                 title = stringResource(R.string.main_camera_permission_required),
                 summary = stringResource(R.string.main_camera_permission_summary),
