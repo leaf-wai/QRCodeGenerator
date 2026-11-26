@@ -62,37 +62,6 @@ app/src/main/java/com/leaf/qrcodegenerator/
 ./gradlew assembleRelease
 ```
 
-### Release 签名配置
-
-`app/build.gradle.kts` 支持通过 `local.properties` 或环境变量读取签名配置：
-
-- `RELEASE_STORE_FILE`：签名密钥库（`.jks` / `.keystore`）路径
-- `RELEASE_STORE_PASSWORD`：密钥库密码
-- `RELEASE_KEY_ALIAS`：密钥别名
-- `RELEASE_KEY_PASSWORD`：密钥密码
-
-未提供签名配置时，`assembleRelease` 将自动输出未签名包 `app-release-unsigned.apk`。
-
-## GitHub Actions 自动构建与发布
-
-项目内置两条工作流：
-
-1. **Android CI** ([`.github/workflows/android-ci.yml`](.github/workflows/android-ci.yml))
-   - 在推送至 `master`/`main` 或提交 Pull Request 时自动触发，也支持手动触发。
-   - 执行 JVM 单元测试（`testDebugUnitTest`）并构建上传 Debug APK 产物。
-2. **Android Release** ([`.github/workflows/android-release.yml`](.github/workflows/android-release.yml))
-   - 在推送版本标签（如 `2.0.2` 或 `v2.0.2`）或手动触发时运行。
-   - 执行单元测试、构建 Release APK 及对应 `.sha256` 校验文件，并在标签推送时自动创建 GitHub Release 并附带发布产物。
-
-如需在 GitHub Actions 中生成正式签名的 Release APK，请在仓库 **Settings → Secrets and variables → Actions** 中配置以下 Secrets：
-
-| Secret 名称 | 说明 |
-| --- | --- |
-| `RELEASE_KEYSTORE_BASE64` | 密钥库文件的 Base64 编码内容（macOS 可执行 `base64 -i your.jks \| pbcopy`，Linux 可执行 `base64 -w 0 your.jks`） |
-| `RELEASE_STORE_PASSWORD` | 密钥库密码 |
-| `RELEASE_KEY_ALIAS` | 密钥别名 |
-| `RELEASE_KEY_PASSWORD` | 密钥密码 |
-
 ## 使用的开源库与资源
 
 感谢以下开源项目、SDK 与字体资源对本项目的支持：
