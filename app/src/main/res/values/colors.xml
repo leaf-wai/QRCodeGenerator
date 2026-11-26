@@ -13,4 +13,5 @@
     <color name="textBlack">#333333</color>
     <color name="tabTextSelected">#282828</color>
     <color name="tabTextUnSelected">#969696</color>
+    <color name="splash_background">#FFF7F7F7</color>
 </resources>

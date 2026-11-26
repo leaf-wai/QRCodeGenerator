@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- HyperOS / Miuix 超椭圆底座（严格位于 72 单位圆形安全区内） -->
+    <path android:pathData="M54,23C76.5,23 85,31.5 85,54C85,76.5 76.5,85 54,85C31.5,85 23,76.5 23,54C23,31.5 31.5,23 54,23Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="85"
+                android:endY="85"
+                android:startX="23"
+                android:startY="23"
+                android:type="linear">
+                <item
+                    android:color="#52A8FF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#3482FF"
+                    android:offset="0.52" />
+                <item
+                    android:color="#1961EB"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path android:pathData="M54,23C76.5,23 85,31.5 85,54C85,76.5 76.5,85 54,85C31.5,85 23,76.5 23,54C23,31.5 31.5,23 54,23Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="38"
+                android:centerY="34"
+                android:gradientRadius="52"
+                android:type="radial">
+                <item
+                    android:color="#36FFFFFF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#00FFFFFF"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 居中缩放的二维码图形 -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.76"
+        android:scaleY="0.76">
+
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M34.5,28H43.5A6.5,6.5 0 0 1 50,34.5V43.5A6.5,6.5 0 0 1 43.5,50H34.5A6.5,6.5 0 0 1 28,43.5V34.5A6.5,6.5 0 0 1 34.5,28ZM35.5,32.5H42.5A3,3 0 0 1 45.5,35.5V42.5A3,3 0 0 1 42.5,45.5H35.5A3,3 0 0 1 32.5,42.5V35.5A3,3 0 0 1 35.5,32.5ZM64.5,28H73.5A6.5,6.5 0 0 1 80,34.5V43.5A6.5,6.5 0 0 1 73.5,50H64.5A6.5,6.5 0 0 1 58,43.5V34.5A6.5,6.5 0 0 1 64.5,28ZM65.5,32.5H72.5A3,3 0 0 1 75.5,35.5V42.5A3,3 0 0 1 72.5,45.5H65.5A3,3 0 0 1 62.5,42.5V35.5A3,3 0 0 1 65.5,32.5ZM34.5,58H43.5A6.5,6.5 0 0 1 50,64.5V73.5A6.5,6.5 0 0 1 43.5,80H34.5A6.5,6.5 0 0 1 28,73.5V64.5A6.5,6.5 0 0 1 34.5,58ZM35.5,62.5H42.5A3,3 0 0 1 45.5,65.5V72.5A3,3 0 0 1 42.5,75.5H35.5A3,3 0 0 1 32.5,72.5V65.5A3,3 0 0 1 35.5,62.5Z" />
+
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M37.8,35.5H40.2A2.3,2.3 0 0 1 42.5,37.8V40.2A2.3,2.3 0 0 1 40.2,42.5H37.8A2.3,2.3 0 0 1 35.5,40.2V37.8A2.3,2.3 0 0 1 37.8,35.5ZM67.8,35.5H70.2A2.3,2.3 0 0 1 72.5,37.8V40.2A2.3,2.3 0 0 1 70.2,42.5H67.8A2.3,2.3 0 0 1 65.5,40.2V37.8A2.3,2.3 0 0 1 67.8,35.5ZM37.8,65.5H40.2A2.3,2.3 0 0 1 42.5,67.8V70.2A2.3,2.3 0 0 1 40.2,72.5H37.8A2.3,2.3 0 0 1 35.5,70.2V67.8A2.3,2.3 0 0 1 37.8,65.5ZM61.2,58H64.3A3.2,3.2 0 0 1 67.5,61.2V64.3A3.2,3.2 0 0 1 64.3,67.5H61.2A3.2,3.2 0 0 1 58,64.3V61.2A3.2,3.2 0 0 1 61.2,58ZM73.7,70.5H76.8A3.2,3.2 0 0 1 80,73.7V76.8A3.2,3.2 0 0 1 76.8,80H73.7A3.2,3.2 0 0 1 70.5,76.8V73.7A3.2,3.2 0 0 1 73.7,70.5Z" />
+
+        <path
+            android:fillColor="#B3FFFFFF"
+            android:pathData="M75.25,58A4.75,4.75 0 1 1 75.25,67.5A4.75,4.75 0 1 1 75.25,58ZM61.2,70.5H64.3A3.2,3.2 0 0 1 67.5,73.7V76.8A3.2,3.2 0 0 1 64.3,80H61.2A3.2,3.2 0 0 1 58,76.8V73.7A3.2,3.2 0 0 1 61.2,70.5Z" />
+    </group>
+</vector>

@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="108dp"
+            android:height="108dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+
+            <group
+                android:name="badge_group"
+                android:pivotX="54"
+                android:pivotY="54"
+                android:scaleX="0.88"
+                android:scaleY="0.88">
+
+                <!-- HyperOS / Miuix 超椭圆底座 -->
+                <path android:pathData="M54,23C76.5,23 85,31.5 85,54C85,76.5 76.5,85 54,85C31.5,85 23,76.5 23,54C23,31.5 31.5,23 54,23Z">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:endX="85"
+                            android:endY="85"
+                            android:startX="23"
+                            android:startY="23"
+                            android:type="linear">
+                            <item
+                                android:color="#52A8FF"
+                                android:offset="0.0" />
+                            <item
+                                android:color="#3482FF"
+                                android:offset="0.52" />
+                            <item
+                                android:color="#1961EB"
+                                android:offset="1.0" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+
+                <path android:pathData="M54,23C76.5,23 85,31.5 85,54C85,76.5 76.5,85 54,85C31.5,85 23,76.5 23,54C23,31.5 31.5,23 54,23Z">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:centerX="38"
+                            android:centerY="34"
+                            android:gradientRadius="52"
+                            android:type="radial">
+                            <item
+                                android:color="#36FFFFFF"
+                                android:offset="0.0" />
+                            <item
+                                android:color="#00FFFFFF"
+                                android:offset="1.0" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+
+                <!-- 裁切到超椭圆内部，确保扫描光束不溢出 -->
+                <clip-path android:pathData="M54,23C76.5,23 85,31.5 85,54C85,76.5 76.5,85 54,85C31.5,85 23,76.5 23,54C23,31.5 31.5,23 54,23Z" />
+
+                <!-- 二维码主体分组，分步弹出 -->
+                <group
+                    android:pivotX="54"
+                    android:pivotY="54"
+                    android:scaleX="0.76"
+                    android:scaleY="0.76">
+
+                    <!-- 左上定位框 -->
+                    <group
+                        android:name="finder_tl"
+                        android:pivotX="39"
+                        android:pivotY="39"
+                        android:scaleX="0.76"
+                        android:scaleY="0.76">
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:fillType="evenOdd"
+                            android:pathData="M34.5,28H43.5A6.5,6.5 0 0 1 50,34.5V43.5A6.5,6.5 0 0 1 43.5,50H34.5A6.5,6.5 0 0 1 28,43.5V34.5A6.5,6.5 0 0 1 34.5,28ZM35.5,32.5H42.5A3,3 0 0 1 45.5,35.5V42.5A3,3 0 0 1 42.5,45.5H35.5A3,3 0 0 1 32.5,42.5V35.5A3,3 0 0 1 35.5,32.5Z" />
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:pathData="M37.8,35.5H40.2A2.3,2.3 0 0 1 42.5,37.8V40.2A2.3,2.3 0 0 1 40.2,42.5H37.8A2.3,2.3 0 0 1 35.5,40.2V37.8A2.3,2.3 0 0 1 37.8,35.5Z" />
+                    </group>
+
+                    <!-- 右上定位框 -->
+                    <group
+                        android:name="finder_tr"
+                        android:pivotX="69"
+                        android:pivotY="39"
+                        android:scaleX="0.76"
+                        android:scaleY="0.76">
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:fillType="evenOdd"
+                            android:pathData="M64.5,28H73.5A6.5,6.5 0 0 1 80,34.5V43.5A6.5,6.5 0 0 1 73.5,50H64.5A6.5,6.5 0 0 1 58,43.5V34.5A6.5,6.5 0 0 1 64.5,28ZM65.5,32.5H72.5A3,3 0 0 1 75.5,35.5V42.5A3,3 0 0 1 72.5,45.5H65.5A3,3 0 0 1 62.5,42.5V35.5A3,3 0 0 1 65.5,32.5Z" />
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:pathData="M67.8,35.5H70.2A2.3,2.3 0 0 1 72.5,37.8V40.2A2.3,2.3 0 0 1 70.2,42.5H67.8A2.3,2.3 0 0 1 65.5,40.2V37.8A2.3,2.3 0 0 1 67.8,35.5Z" />
+                    </group>
+
+                    <!-- 左下定位框 -->
+                    <group
+                        android:name="finder_bl"
+                        android:pivotX="39"
+                        android:pivotY="69"
+                        android:scaleX="0.76"
+                        android:scaleY="0.76">
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:fillType="evenOdd"
+                            android:pathData="M34.5,58H43.5A6.5,6.5 0 0 1 50,64.5V73.5A6.5,6.5 0 0 1 43.5,80H34.5A6.5,6.5 0 0 1 28,73.5V64.5A6.5,6.5 0 0 1 34.5,58ZM35.5,62.5H42.5A3,3 0 0 1 45.5,65.5V72.5A3,3 0 0 1 42.5,75.5H35.5A3,3 0 0 1 32.5,72.5V65.5A3,3 0 0 1 35.5,62.5Z" />
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:pathData="M37.8,65.5H40.2A2.3,2.3 0 0 1 42.5,67.8V70.2A2.3,2.3 0 0 1 40.2,72.5H37.8A2.3,2.3 0 0 1 35.5,70.2V67.8A2.3,2.3 0 0 1 37.8,65.5Z" />
+                    </group>
+
+                    <!-- 右下双层玻璃点缀模块 -->
+                    <group
+                        android:name="modules_br"
+                        android:pivotX="69"
+                        android:pivotY="69"
+                        android:scaleX="0.68"
+                        android:scaleY="0.68">
+                        <path
+                            android:fillColor="#FFFFFF"
+                            android:pathData="M61.2,58H64.3A3.2,3.2 0 0 1 67.5,61.2V64.3A3.2,3.2 0 0 1 64.3,67.5H61.2A3.2,3.2 0 0 1 58,64.3V61.2A3.2,3.2 0 0 1 61.2,58ZM73.7,70.5H76.8A3.2,3.2 0 0 1 80,73.7V76.8A3.2,3.2 0 0 1 76.8,80H73.7A3.2,3.2 0 0 1 70.5,76.8V73.7A3.2,3.2 0 0 1 73.7,70.5Z" />
+                        <path
+                            android:fillColor="#B3FFFFFF"
+                            android:pathData="M75.25,58A4.75,4.75 0 1 1 75.25,67.5A4.75,4.75 0 1 1 75.25,58ZM61.2,70.5H64.3A3.2,3.2 0 0 1 67.5,73.7V76.8A3.2,3.2 0 0 1 64.3,80H61.2A3.2,3.2 0 0 1 58,76.8V73.7A3.2,3.2 0 0 1 61.2,70.5Z" />
+                    </group>
+                </group>
+
+                <!-- 扫描光束（从上向下扫过并淡出） -->
+                <group
+                    android:name="scan_beam_group"
+                    android:translateY="-28">
+                    <path
+                        android:name="scan_beam_glow"
+                        android:fillAlpha="0"
+                        android:pathData="M26,44H82V55H26Z">
+                        <aapt:attr name="android:fillColor">
+                            <gradient
+                                android:endX="54"
+                                android:endY="55"
+                                android:startX="54"
+                                android:startY="44"
+                                android:type="linear">
+                                <item
+                                    android:color="#00FFFFFF"
+                                    android:offset="0.0" />
+                                <item
+                                    android:color="#80D4EBFF"
+                                    android:offset="1.0" />
+                            </gradient>
+                        </aapt:attr>
+                    </path>
+                    <path
+                        android:name="scan_beam_line"
+                        android:fillAlpha="0"
+                        android:fillColor="#FFFFFF"
+                        android:pathData="M30,53.2H78A1.3,1.3 0 0 1 79.3,54.5A1.3,1.3 0 0 1 78,55.8H30A1.3,1.3 0 0 1 28.7,54.5A1.3,1.3 0 0 1 30,53.2Z" />
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+
+    <!-- 底座轻微缩放回弹 -->
+    <target android:name="badge_group">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="scaleX"
+                    android:valueFrom="0.88"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="scaleY"
+                    android:valueFrom="0.88"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- 左上定位框回弹 -->
+    <target android:name="finder_tl">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleX"
+                    android:startOffset="20"
+                    android:valueFrom="0.76"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleY"
+                    android:startOffset="20"
+                    android:valueFrom="0.76"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- 右上定位框回弹 -->
+    <target android:name="finder_tr">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleX"
+                    android:startOffset="70"
+                    android:valueFrom="0.76"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleY"
+                    android:startOffset="70"
+                    android:valueFrom="0.76"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- 左下定位框回弹 -->
+    <target android:name="finder_bl">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleX"
+                    android:startOffset="120"
+                    android:valueFrom="0.76"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleY"
+                    android:startOffset="120"
+                    android:valueFrom="0.76"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- 右下玻璃模块回弹 -->
+    <target android:name="modules_br">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleX"
+                    android:startOffset="160"
+                    android:valueFrom="0.68"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="280"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleY"
+                    android:startOffset="160"
+                    android:valueFrom="0.68"
+                    android:valueTo="1.0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- 扫描光束位移 -->
+    <target android:name="scan_beam_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="460"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="translateY"
+                android:startOffset="180"
+                android:valueFrom="-28"
+                android:valueTo="28"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+
+    <!-- 扫描光晕淡入淡出 -->
+    <target android:name="scan_beam_glow">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:duration="120"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="180"
+                    android:valueFrom="0"
+                    android:valueTo="0.9"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="200"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0.9"
+                    android:valueTo="0.9"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="140"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0.9"
+                    android:valueTo="0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- 扫描光条淡入淡出 -->
+    <target android:name="scan_beam_line">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:duration="120"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="180"
+                    android:valueFrom="0"
+                    android:valueTo="0.95"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="200"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0.95"
+                    android:valueTo="0.95"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="140"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0.95"
+                    android:valueTo="0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

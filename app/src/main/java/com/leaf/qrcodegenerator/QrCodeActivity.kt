@@ -149,10 +149,7 @@ private fun QrCodeScreen(
                 largeTitle = stringResource(R.string.qr_code_title),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = PageHorizontalPadding)
-                    ) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             imageVector = MiuixIcons.Back,
                             contentDescription = stringResource(R.string.common_back),

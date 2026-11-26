@@ -11,6 +11,7 @@
     <string name="common_cancel">取消</string>
     <string name="common_confirm">确定</string>
     <string name="common_select_all">全选</string>
+    <string name="common_deselect_all">取消全选</string>
     <string name="common_back">返回</string>
     <string name="common_notice">提示</string>
     <string name="main_confirm_clear_history">确认清除历史记录？</string>

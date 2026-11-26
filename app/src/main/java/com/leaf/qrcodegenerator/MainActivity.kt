@@ -1,17 +1,27 @@
 package com.leaf.qrcodegenerator
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.view.animation.PathInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,14 +48,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -53,7 +62,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.leaf.qrcodegenerator.ui.AppSnackbarHost
 import com.leaf.qrcodegenerator.ui.PageHorizontalPadding
@@ -65,6 +77,8 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -76,12 +90,14 @@ import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Recent
 import top.yukonga.miuix.kmp.icon.extended.Scan
+import top.yukonga.miuix.kmp.icon.extended.SelectAll
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
@@ -98,8 +114,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        setupSplashExitAnimation(splashScreen)
         setContent {
             QrCodeGeneratorTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -159,6 +177,41 @@ class MainActivity : ComponentActivity() {
             },
         )
     }
+
+    private fun setupSplashExitAnimation(splashScreen: SplashScreen) {
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val splashView = splashScreenViewProvider.view
+            val iconView = runCatching { splashScreenViewProvider.iconView }.getOrNull()
+
+            // 等待启动图标动画完成剩余时长（限制上限避免拖慢冷启动）
+            val remainingIconDuration = if (splashScreenViewProvider.iconAnimationStartMillis > 0L) {
+                (
+                    splashScreenViewProvider.iconAnimationStartMillis +
+                        splashScreenViewProvider.iconAnimationDurationMillis -
+                        System.currentTimeMillis()
+                    ).coerceIn(0L, 450L)
+            } else {
+                120L
+            }
+
+            val animators = buildList<Animator> {
+                add(ObjectAnimator.ofFloat(splashView, View.ALPHA, 1f, 0f))
+                if (iconView != null) {
+                    add(ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 1.08f))
+                    add(ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 1.08f))
+                }
+            }
+
+            AnimatorSet().apply {
+                startDelay = remainingIconDuration
+                duration = 260L
+                interpolator = PathInterpolator(0.2f, 0f, 0f, 1f)
+                playTogether(animators)
+                doOnEnd { splashScreenViewProvider.remove() }
+                start()
+            }
+        }
+    }
 }
 
 @Composable
@@ -172,8 +225,11 @@ private fun MainScreen(
     onGenerate: (String) -> Unit,
     onCopy: (String) -> Unit,
     onDeleteHistory: (Set<String>) -> Unit,
+    initialPage: Int = 0,
+    initialHistorySelectionMode: Boolean = false,
+    initialSelectedHistoryItems: Set<String> = emptySet(),
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = MiuixScrollBehavior()
@@ -181,9 +237,10 @@ private fun MainScreen(
     val historyTitle = stringResource(R.string.main_history)
     val emptyContentMessage = stringResource(R.string.main_empty_content)
     val copiedMessage = stringResource(R.string.common_copied_to_clipboard)
-    var isHistorySelectionMode by remember { mutableStateOf(false) }
-    var selectedHistoryItems by remember { mutableStateOf(emptySet<String>()) }
+    var isHistorySelectionMode by remember { mutableStateOf(initialHistorySelectionMode) }
+    var selectedHistoryItems by remember { mutableStateOf(initialSelectedHistoryItems) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val showHistorySelectionToolbar = isHistorySelectionMode && pagerState.currentPage == 1
     val exitHistorySelection = {
         isHistorySelectionMode = false
         selectedHistoryItems = emptySet()
@@ -207,9 +264,8 @@ private fun MainScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MiuixTheme {
-                TopAppBar(
-                    title = when {
+            TopAppBar(
+                title = when {
                     pagerState.currentPage == 0 -> generateTitle
                     isHistorySelectionMode -> stringResource(
                         R.string.main_selected_history_count,
@@ -217,7 +273,8 @@ private fun MainScreen(
                     )
 
                     else -> historyTitle
-                }, largeTitle = when {
+                },
+                largeTitle = when {
                     pagerState.currentPage == 0 -> {
                         stringResource(R.string.main_generate_qr_code)
                     }
@@ -230,12 +287,11 @@ private fun MainScreen(
                     else -> {
                         stringResource(R.string.main_history_records)
                     }
-                }, scrollBehavior = scrollBehavior, navigationIcon = {
-                    if (isHistorySelectionMode && pagerState.currentPage == 1) {
-                        IconButton(
-                            onClick = exitHistorySelection,
-                            modifier = Modifier.padding(start = PageHorizontalPadding),
-                        ) {
+                },
+                scrollBehavior = scrollBehavior,
+                navigationIcon = {
+                    if (showHistorySelectionToolbar) {
+                        IconButton(onClick = exitHistorySelection) {
                             Icon(
                                 imageVector = MiuixIcons.Close,
                                 contentDescription = stringResource(R.string.common_cancel),
@@ -243,35 +299,46 @@ private fun MainScreen(
                             )
                         }
                     }
-                }, actions = {
-                    if (isHistorySelectionMode && pagerState.currentPage == 1) {
-                        val allSelected = selectedHistoryItems.size == history.size
-                        val selectAllDescription = stringResource(R.string.common_select_all)
-                        Checkbox(
-                            state = if (allSelected) ToggleableState.On else ToggleableState.Off,
+                },
+                actions = {
+                    if (showHistorySelectionToolbar) {
+                        val allSelected = history.isNotEmpty() &&
+                            selectedHistoryItems.size == history.size
+                        IconButton(
                             onClick = {
                                 selectedHistoryItems =
                                     if (allSelected) emptySet() else history.toSet()
                             },
-                            modifier = Modifier
-                                .padding(end = PageHorizontalPadding)
-                                .semantics {
-                                    contentDescription = selectAllDescription
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.SelectAll,
+                                contentDescription = stringResource(
+                                    if (allSelected) {
+                                        R.string.common_deselect_all
+                                    } else {
+                                        R.string.common_select_all
+                                    },
+                                ),
+                                modifier = Modifier.size(24.dp),
+                                tint = if (allSelected) {
+                                    MiuixTheme.colorScheme.primary
+                                } else {
+                                    MiuixTheme.colorScheme.onSurface
                                 },
-                        )
+                            )
+                        }
                     } else {
                         IconButton(
                             onClick = if (pagerState.currentPage == 0) onScan else {
                                 { if (history.isNotEmpty()) isHistorySelectionMode = true }
                             },
-                            enabled = pagerState.currentPage == 0 || history.isNotEmpty(),
-                            modifier = Modifier.padding(end = PageHorizontalPadding),
+                            enabled = pagerState.currentPage == 0 || history.isNotEmpty()
                         ) {
                             Icon(
                                 imageVector = if (pagerState.currentPage == 0) {
                                     MiuixIcons.Scan
                                 } else {
-                                    MiuixIcons.Delete
+                                    MiuixIcons.SelectAll
                                 },
                                 contentDescription = if (pagerState.currentPage == 0) {
                                     stringResource(R.string.main_scan_qr_code)
@@ -282,21 +349,12 @@ private fun MainScreen(
                             )
                         }
                     }
-                })
-            }
+                },
+            )
         },
         bottomBar = {
-            NavigationBar {
-                if (isHistorySelectionMode && pagerState.currentPage == 1) {
-                    NavigationBarItem(
-                        modifier = Modifier.weight(1f),
-                        selected = true,
-                        onClick = { showDeleteDialog = true },
-                        enabled = selectedHistoryItems.isNotEmpty(),
-                        icon = MiuixIcons.Delete,
-                        label = stringResource(R.string.main_delete_selected_history_count),
-                    )
-                } else {
+            if (!showHistorySelectionToolbar) {
+                NavigationBar {
                     NavigationBarItem(
                         modifier = Modifier.weight(1f),
                         selected = pagerState.currentPage == 0,
@@ -317,6 +375,51 @@ private fun MainScreen(
                 }
             }
         },
+        floatingToolbar = {
+            AnimatedVisibility(
+                visible = showHistorySelectionToolbar,
+                enter = fadeIn(tween(180)) + scaleIn(tween(180), initialScale = 0.92f),
+                exit = ExitTransition.None,
+            ) {
+                val deleteEnabled = selectedHistoryItems.isNotEmpty()
+                val deleteContentColor = if (deleteEnabled) {
+                    MiuixTheme.colorScheme.error
+                } else {
+                    MiuixTheme.colorScheme.disabledOnSurface
+                }
+                FloatingToolbar(
+                    showDivider = true,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Button(
+                            onClick = { showDeleteDialog = true },
+                            enabled = deleteEnabled,
+                            cornerRadius = FloatingToolbarDefaults.CornerRadius,
+                            minHeight = 40.dp,
+                            colors = ButtonDefaults.buttonColors(
+                                color = Color.Transparent,
+                                disabledColor = Color.Transparent,
+                                contentColor = MiuixTheme.colorScheme.error,
+                                disabledContentColor = MiuixTheme.colorScheme.disabledOnSurface,
+                            ),
+                            insideMargin = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Delete,
+                                contentDescription = stringResource(R.string.main_delete_selected_history),
+                                modifier = Modifier.size(20.dp),
+                                tint = deleteContentColor,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        floatingToolbarPosition = ToolbarPosition.BottomCenter,
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Box(
@@ -518,7 +621,7 @@ private fun HistoryPage(
         contentPadding = PaddingValues(
             start = PageHorizontalPadding,
             end = PageHorizontalPadding,
-            bottom = bottomPadding,
+            bottom = bottomPadding + if (selectionMode) 80.dp else 0.dp,
         ),
     ) {
         item { Spacer(Modifier.height(12.dp)) }
@@ -598,6 +701,31 @@ private fun MainScreenPreview() {
             onGenerate = {},
             onCopy = {},
             onDeleteHistory = {},
+        )
+    }
+}
+
+@Preview(name = "Main - History Selection", showBackground = true)
+@Composable
+private fun MainHistorySelectionPreview() {
+    QrCodeGeneratorTheme {
+        MainScreen(
+            history = listOf(
+                "https://compose-miuix-ui.github.io/miuix/",
+                "Jetpack Compose 可预览界面",
+                "https://developer.android.com/jetpack/compose",
+            ),
+            clipboardText = "",
+            showCameraPermissionDialog = false,
+            onDismissPermissionDialog = {},
+            onOpenSettings = {},
+            onScan = {},
+            onGenerate = {},
+            onCopy = {},
+            onDeleteHistory = {},
+            initialPage = 1,
+            initialHistorySelectionMode = true,
+            initialSelectedHistoryItems = setOf("Jetpack Compose 可预览界面"),
         )
     }
 }

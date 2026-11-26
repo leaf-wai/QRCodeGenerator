@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Miuix / HyperOS 风格渐进蓝底色 -->
+    <path android:pathData="M0,0H108V108H0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="102"
+                android:endY="108"
+                android:startX="10"
+                android:startY="0"
+                android:type="linear">
+                <item
+                    android:color="#52A8FF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#3482FF"
+                    android:offset="0.52" />
+                <item
+                    android:color="#1961EB"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 柔和左上高光层，呈现 HyperOS 图标立体质感 -->
+    <path android:pathData="M0,0H108V108H0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="28"
+                android:centerY="22"
+                android:gradientRadius="78"
+                android:type="radial">
+                <item
+                    android:color="#36FFFFFF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#00FFFFFF"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
