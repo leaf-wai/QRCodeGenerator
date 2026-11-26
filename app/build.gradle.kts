@@ -1,30 +1,36 @@
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 val localProperties = Properties().apply {
-    rootProject.file("local.properties").inputStream().use(::load)
+    val content = providers.fileContents(
+        rootProject.layout.projectDirectory.file("local.properties"),
+    ).asText.orNull
+    content?.reader()?.use(::load)
 }
+
+fun signingProperty(name: String): String? =
+    localProperties.getProperty(name)?.takeIf(String::isNotBlank)
+        ?: providers.environmentVariable(name).orNull?.takeIf(String::isNotBlank)
+
+val releaseStoreFile = signingProperty("RELEASE_STORE_FILE")
+    ?.let(::file)
+    ?: file("/Users/leafwai/Documents/leafkey.jks")
+val releaseStorePassword = signingProperty("RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = signingProperty("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = signingProperty("RELEASE_KEY_PASSWORD")
+val hasReleaseSigning = releaseStoreFile.isFile &&
+    releaseStorePassword != null &&
+    releaseKeyAlias != null &&
+    releaseKeyPassword != null
 
 android {
     namespace = "com.leaf.qrcodegenerator"
-    compileSdk = 37
-
-    signingConfigs {
-        create("release") {
-            storeFile = file("/Users/leafwai/Documents/leafkey.jks")
-            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
-                ?.takeIf(String::isNotBlank)
-            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
-                ?.takeIf(String::isNotBlank)
-            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
-                ?.takeIf(String::isNotBlank)
-        }
+    compileSdk {
+        version = release(37)
     }
 
     defaultConfig {
@@ -41,15 +47,24 @@ android {
         }
     }
 
-    buildFeatures {
-        compose = true
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -57,37 +72,26 @@ android {
         }
     }
 
+    buildFeatures {
+        compose = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-    }
 }
 
 dependencies {
-    implementation(libs.compose.runtime)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.androidx.activity.compose)
+    implementation(libs.bundles.compose)
     implementation(libs.bundles.miuix)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.compose)
-    implementation(libs.androidx.camera.mlkit.vision)
-    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.bundles.lifecycle)
+    implementation(libs.bundles.camerax)
+
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.mlkit.barcode.scanning)
     implementation(libs.zxing.core)
     implementation(libs.mmkv)
 
