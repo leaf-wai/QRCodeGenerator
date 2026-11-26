@@ -25,6 +25,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -326,11 +327,12 @@ private fun MainScreen(
                             )
                         }
                     } else {
+                        val actionEnabled = pagerState.currentPage == 0 || history.isNotEmpty()
                         IconButton(
                             onClick = if (pagerState.currentPage == 0) onScan else {
                                 { if (history.isNotEmpty()) isHistorySelectionMode = true }
                             },
-                            enabled = pagerState.currentPage == 0 || history.isNotEmpty()
+                            enabled = actionEnabled,
                         ) {
                             Icon(
                                 imageVector = if (pagerState.currentPage == 0) {
@@ -344,6 +346,11 @@ private fun MainScreen(
                                     stringResource(R.string.main_select_history_to_delete)
                                 },
                                 modifier = Modifier.size(24.dp),
+                                tint = if (actionEnabled) {
+                                    MiuixTheme.colorScheme.onSurface
+                                } else {
+                                    MiuixTheme.colorScheme.disabledOnSurface
+                                },
                             )
                         }
                     }
@@ -601,13 +608,28 @@ private fun HistoryPage(
     onToggleSelection: (String) -> Unit,
 ) {
     if (history.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(R.drawable.empty_history),
-                contentDescription = stringResource(R.string.main_empty_history),
-                modifier = Modifier.size(width = 144.dp, height = 129.dp),
-                contentScale = ContentScale.Fit,
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = bottomPadding),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.empty_history),
+                    contentDescription = null,
+                    modifier = Modifier.size(120.dp),
+                    contentScale = ContentScale.Fit,
+                )
+                Text(
+                    text = stringResource(R.string.main_empty_history),
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MiuixTheme.textStyles.body2,
+                )
+            }
         }
         return
     }

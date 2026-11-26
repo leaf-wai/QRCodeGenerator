@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- 暗色模式下柔和深蓝光晕 -->
+    <path android:pathData="M60,16A46,46 0 1 1 60,108A46,46 0 1 1 60,16Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="60"
+                android:centerY="62"
+                android:gradientRadius="46"
+                android:type="radial">
+                <item
+                    android:color="#263B66"
+                    android:offset="0.0" />
+                <item
+                    android:color="#00263B66"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 后层堆叠卡片 -->
+    <path
+        android:fillColor="#1E222B"
+        android:pathData="M44,26H76A12,12 0 0 1 88,38V64A12,12 0 0 1 76,76H44A12,12 0 0 1 32,64V38A12,12 0 0 1 44,26Z" />
+
+    <!-- 主卡片柔和投影 -->
+    <path
+        android:fillColor="#48000000"
+        android:pathData="M36,38.5H80A14,14 0 0 1 94,52.5V76.5A14,14 0 0 1 80,90.5H36A14,14 0 0 1 22,76.5V52.5A14,14 0 0 1 36,38.5Z" />
+
+    <!-- 主 Miuix 暗色圆角卡片 -->
+    <path
+        android:pathData="M36,36H80A14,14 0 0 1 94,50V74A14,14 0 0 1 80,88H36A14,14 0 0 1 22,74V50A14,14 0 0 1 36,36Z"
+        android:strokeWidth="1.2"
+        android:strokeColor="#3A3F4B">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="94"
+                android:endY="88"
+                android:startX="22"
+                android:startY="36"
+                android:type="linear">
+                <item
+                    android:color="#2D313B"
+                    android:offset="0.0" />
+                <item
+                    android:color="#23262F"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 左侧柔和二维码定位图标 -->
+    <path
+        android:fillColor="#5274AD"
+        android:fillType="evenOdd"
+        android:pathData="M35.5,51H39.5A2.5,2.5 0 0 1 42,53.5V57.5A2.5,2.5 0 0 1 39.5,60H35.5A2.5,2.5 0 0 1 33,57.5V53.5A2.5,2.5 0 0 1 35.5,51ZM36.5,53.5H38.5A1,1 0 0 1 39.5,54.5V56.5A1,1 0 0 1 38.5,57.5H36.5A1,1 0 0 1 35.5,56.5V54.5A1,1 0 0 1 36.5,53.5ZM48.5,51H52.5A2.5,2.5 0 0 1 55,53.5V57.5A2.5,2.5 0 0 1 52.5,60H48.5A2.5,2.5 0 0 1 46,57.5V53.5A2.5,2.5 0 0 1 48.5,51ZM49.5,53.5H51.5A1,1 0 0 1 52.5,54.5V56.5A1,1 0 0 1 51.5,57.5H49.5A1,1 0 0 1 48.5,56.5V54.5A1,1 0 0 1 49.5,53.5ZM35.5,64H39.5A2.5,2.5 0 0 1 42,66.5V70.5A2.5,2.5 0 0 1 39.5,73H35.5A2.5,2.5 0 0 1 33,70.5V66.5A2.5,2.5 0 0 1 35.5,64ZM36.5,66.5H38.5A1,1 0 0 1 39.5,67.5V69.5A1,1 0 0 1 38.5,70.5H36.5A1,1 0 0 1 35.5,69.5V67.5A1,1 0 0 1 36.5,66.5Z" />
+
+    <path
+        android:fillColor="#5274AD"
+        android:pathData="M47.3,64H48.7A1.3,1.3 0 0 1 50,65.3V66.7A1.3,1.3 0 0 1 48.7,68H47.3A1.3,1.3 0 0 1 46,66.7V65.3A1.3,1.3 0 0 1 47.3,64ZM52.3,69H53.7A1.3,1.3 0 0 1 55,70.3V71.7A1.3,1.3 0 0 1 53.7,73H52.3A1.3,1.3 0 0 1 51,71.7V70.3A1.3,1.3 0 0 1 52.3,69Z" />
+
+    <path
+        android:fillColor="#3A4F75"
+        android:pathData="M53,64A2,2 0 1 1 53,68A2,2 0 1 1 53,64ZM47.3,69H48.7A1.3,1.3 0 0 1 50,70.3V71.7A1.3,1.3 0 0 1 48.7,73H47.3A1.3,1.3 0 0 1 46,71.7V70.3A1.3,1.3 0 0 1 47.3,69Z" />
+
+    <!-- 右侧历史记录占位条 -->
+    <path
+        android:fillColor="#444A58"
+        android:pathData="M64.5,54.5H81.5A2.5,2.5 0 0 1 84,57A2.5,2.5 0 0 1 81.5,59.5H64.5A2.5,2.5 0 0 1 62,57A2.5,2.5 0 0 1 64.5,54.5Z" />
+    <path
+        android:fillColor="#373C48"
+        android:pathData="M64.5,64.5H74.5A2.5,2.5 0 0 1 77,67A2.5,2.5 0 0 1 74.5,69.5H64.5A2.5,2.5 0 0 1 62,67A2.5,2.5 0 0 1 64.5,64.5Z" />
+
+    <!-- 右下角历史时钟浮标 -->
+    <path
+        android:fillColor="#181A20"
+        android:pathData="M90,69A14,14 0 1 1 90,97A14,14 0 1 1 90,69Z" />
+
+    <path android:pathData="M90,71.5A11.5,11.5 0 1 1 90,94.5A11.5,11.5 0 1 1 90,71.5Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="100"
+                android:endY="94"
+                android:startX="80"
+                android:startY="72"
+                android:type="linear">
+                <item
+                    android:color="#4998FF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#277AF7"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M90,77.5V83L94,85.5"
+        android:strokeWidth="2.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
